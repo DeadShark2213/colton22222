@@ -1,77 +1,354 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blue Background</title>
-    <style>
-        body {
-            background-color: blue;
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tiny FPS Template — Stickman</title>
+<style>
+  html,body { height:100%; margin:0; background:#000; overflow:hidden; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; color:#eee; }
+  canvas { display:block; background:#6fb0ff; } /* sky color; ground drawn in canvas too */
+  #hud {
+    position: absolute; left:12px; top:12px; z-index:10;
+    background:rgba(0,0,0,0.35); padding:8px 10px; border-radius:6px; font-size:13px;
+  }
+  #instructions {
+    position:absolute; left:50%; transform:translateX(-50%); bottom:20px; z-index:10;
+    background:rgba(0,0,0,0.45); color:#fff; padding:8px 12px; border-radius:6px; font-size:13px;
+  }
+  button { margin-left:8px; }
+</style>
 </head>
 <body>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pizza Edition Button</title>
-    <style>
-        .pizza-button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: black;
-            color: black;
-            text-align: center;
-            text-decoration: none;
-            font-size: 16px;
-            font-family: Arial, sans-serif;
-            border-radius: 5px;
-            border: 2px solid black;
-            cursor: pointer;
-        }
+<canvas id="c"></canvas>
+<div id="hud">
+  <div>Enemies: <span id="enemyCount">0</span></div>
+  <div>Health: <span id="health">100</span></div>
+  <div style="margin-top:6px;font-size:12px;color:#ddd">Click to lock pointer, click to shoot</div>
+</div>
+<div id="instructions">
+  Controls: W/A/S/D to move, mouse to look. R to respawn enemies. Esc to release pointer.
+  <button id="spawnBtn">Spawn 6</button>
+</div>
 
-        .pizza-button:hover {
-            background-color: #333333; /* Slightly lighter black for hover effect */
-            color: white; /* Changes text to white on hover for better visibility */
-        }
-    </style>
-</head>
-<body>
-    <a class="pizza-button" href="https://pizzaedition.win/index.html#google_vignette" target="_blank">Pizza Edition</a>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skribbl.io Button</title>
-    <style>
-        .skribbl-button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: black;
-            color: black;
-            text-align: center;
-            text-decoration: none;
-            font-size: 16px;
-            font-family: Arial, sans-serif;
-            border-radius: 5px;
-            border: 2px solid black;
-            cursor: pointer;
-        }
+<script>
+/*
+ Tiny FPS-like template (first-person projection onto canvas).
+ - WASD movement
+ - Pointer lock + mouse look
+ - Crosshair in center
+ - Enemies are simple "stickmen" drawn with lines and scaled by distance (pseudo-3D)
+ - Left click to shoot (ray/angle hit detection). Enemies chase player.
+ - Single-file, vanilla JS. Expand as you like.
+*/
 
-        .skribbl-button:hover {
-            background-color: #333333; /* Slightly lighter black for hover effect */
-            color: white; /* Changes text to white on hover for better visibility */
-        }
-    </style>
-</head>
-<body>
-    <a class="skribbl-button" href="https://skribbl.io/" target="_blank">skribbl.io</a>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+let W = canvas.width = innerWidth;
+let H = canvas.height = innerHeight;
+window.addEventListener('resize', () => { W = canvas.width = innerWidth; H = canvas.height = innerHeight; });
+
+/* Player */
+const player = {
+  x: 0, y: 0, // world coords
+  angle: 0,   // radians, 0 => facing +Y
+  speed: 160, // units/sec
+  turnSpeed: 0.004,
+  health: 100
+};
+
+/* World bounds (simple open area) */
+const world = {
+  bounds: 2000, // +/- bounds in world coordinates
+};
+
+/* Camera / projection settings */
+const FOV = Math.PI / 3.5; // ~51 degrees
+function projPlaneDist() { return (W / 2) / Math.tan(FOV / 2); }
+
+/* Input state */
+const keys = {};
+let pointerLocked = false;
+document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+canvas.addEventListener('click', () => {
+  if (!pointerLocked) canvas.requestPointerLock?.();
+  else shoot();
+});
+document.addEventListener('pointerlockchange', () => {
+  pointerLocked = (document.pointerLockElement === canvas);
+});
+document.addEventListener('mousemove', (e) => {
+  if (!pointerLocked) return;
+  player.angle += e.movementX * -0.0025; // sensitivity
+});
+
+/* Enemies */
+const enemies = [];
+const ENEMY_SPEED = 60;
+function spawnEnemies(n=6) {
+  enemies.length = 0;
+  for (let i=0;i<n;i++) {
+    const a = Math.random() * Math.PI*2;
+    const r = 300 + Math.random()*800;
+    enemies.push({
+      x: player.x + Math.cos(a)*r,
+      y: player.y + Math.sin(a)*r,
+      hp: 100,
+      dead: false,
+      id: Math.random().toString(36).slice(2,8),
+    });
+  }
+  updateHUD();
+}
+
+/* Basic chase behavior */
+function updateEnemies(dt) {
+  for (const e of enemies) {
+    if (e.dead) continue;
+    // move towards player
+    let dx = player.x - e.x;
+    let dy = player.y - e.y;
+    const dist = Math.hypot(dx,dy) || 1;
+    const nx = dx/dist, ny = dy/dist;
+    e.x += nx * ENEMY_SPEED * dt;
+    e.y += ny * ENEMY_SPEED * dt;
+    // simple melee damage if too close
+    if (dist < 28) {
+      player.health = Math.max(0, player.health - 20 * dt);
+      if (player.health === 0) {
+        // dead, freeze
+      }
+    }
+  }
+}
+
+/* Shooting: cast a ray from center; check nearest enemy within angle threshold and range */
+function shoot() {
+  const maxRange = 1200;
+  const hitAngle = Math.tan((30 * Math.PI/180)); // allow some tolerance, will check using lateral offset
+  let best = null;
+  for (const e of enemies) {
+    if (e.dead) continue;
+    // position relative to camera
+    const dx = e.x - player.x;
+    const dy = e.y - player.y;
+    // camera forward & right vectors
+    const fx = Math.cos(player.angle), fy = Math.sin(player.angle);
+    const rx = Math.cos(player.angle + Math.PI/2), ry = Math.sin(player.angle + Math.PI/2);
+    const forward = dx*fx + dy*fy; // z
+    const right = dx*rx + dy*ry;   // x side
+    if (forward <= 0) continue; // behind
+    if (forward > maxRange) continue;
+    const lateral = Math.abs(right / forward); // tan(angle)
+    // lateral threshold
+    if (lateral > hitAngle) continue;
+    const d = Math.hypot(dx,dy);
+    if (!best || d < best.dist) best = {enemy:e, dist:d};
+  }
+  if (best) {
+    best.enemy.hp -= 75;
+    if (best.enemy.hp <= 0) {
+      best.enemy.dead = true;
+      updateHUD();
+    }
+  }
+}
+
+/* Drawing utilities: draw stickman at screen position with a scale factor */
+function drawStickmanScreen(cx, cy, scale, color="#111", strokeStyle="#000") {
+  // head
+  ctx.strokeStyle = strokeStyle;
+  ctx.lineWidth = Math.max(1, Math.round(scale*0.06));
+  ctx.beginPath();
+  ctx.arc(cx, cy - scale*0.55, scale*0.22, 0, Math.PI*2);
+  ctx.stroke();
+  // body
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - scale*0.33);
+  ctx.lineTo(cx, cy + scale*0.2);
+  // arms
+  ctx.moveTo(cx - scale*0.4, cy - scale*0.05);
+  ctx.lineTo(cx + scale*0.4, cy - scale*0.05);
+  // legs
+  ctx.moveTo(cx, cy + scale*0.2);
+  ctx.lineTo(cx - scale*0.35, cy + scale*0.7);
+  ctx.moveTo(cx, cy + scale*0.2);
+  ctx.lineTo(cx + scale*0.35, cy + scale*0.7);
+  ctx.stroke();
+  // fill head simple
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy - scale*0.55, scale*0.1, 0, Math.PI*2);
+  ctx.fill();
+}
+
+/* Render scene: sky, ground, simple horizon, enemies projected */
+function render() {
+  // background: sky and ground
+  ctx.clearRect(0,0,W,H);
+  // sky gradient
+  const g = ctx.createLinearGradient(0,0,0,H*0.6);
+  g.addColorStop(0, "#6fb0ff");
+  g.addColorStop(1, "#87c97a");
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+
+  // horizon line
+  const horizonY = H * 0.45;
+  ctx.fillStyle = "#3c6b3a";
+  ctx.fillRect(0, horizonY, W, H - horizonY);
+
+  // draw a faint grid on ground to give depth
+  ctx.save();
+  ctx.translate(W/2, horizonY + 80); // visual offset
+  ctx.strokeStyle = "rgba(0,0,0,0.06)";
+  for (let i=50;i<5000;i+=100) {
+    const scale = projPlaneDist()/i;
+    const lineY = scale * 120;
+    if (lineY > H) break;
+    ctx.beginPath();
+    ctx.moveTo(-W, lineY);
+    ctx.lineTo(W, lineY);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // project enemies
+  const proj = projPlaneDist();
+  const centerX = W/2;
+  const centerY = horizonY + 120; // baseline for vertical placement
+  // sort by depth (far to near)
+  const visible = [];
+  for (const e of enemies) {
+    if (e.dead) continue;
+    const dx = e.x - player.x;
+    const dy = e.y - player.y;
+    const fx = Math.cos(player.angle), fy = Math.sin(player.angle);
+    const rx = Math.cos(player.angle + Math.PI/2), ry = Math.sin(player.angle + Math.PI/2);
+    const forward = dx*fx + dy*fy;
+    const right = dx*rx + dy*ry;
+    if (forward <= 0.5) continue; // behind or too close
+    visible.push({e, forward, right});
+  }
+  visible.sort((a,b) => b.forward - a.forward); // far first (so near draws last)
+  for (const v of visible) {
+    const scale = proj / v.forward;
+    const screenX = centerX + v.right * scale;
+    const screenY = centerY + (1/scale) * 6 * 5; // slight offset by depth to emulate floor (tweakable)
+    // clamp scale to reasonable
+    const s = Math.min(220, Math.max(20, 120 * scale));
+    // draw enemy
+    drawStickmanScreen(screenX, screenY, s, "#222", "#031");
+    // hp bar
+    const barW = s * 0.9;
+    const barH = 6;
+    const bx = screenX - barW/2;
+    const by = screenY - s*0.85;
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillRect(bx-1, by-1, barW+2, barH+2);
+    ctx.fillStyle = "red";
+    ctx.fillRect(bx, by, barW * Math.max(0, v.e.hp/100), barH);
+  }
+
+  // draw player's small stick (lower center) to simulate body
+  const playerBodyScale = 42;
+  drawStickmanScreen(W/2, H*0.88, playerBodyScale, "#111", "#050");
+
+  // crosshair
+  ctx.strokeStyle = "rgba(255,255,255,0.95)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(W/2 - 18, H/2);
+  ctx.lineTo(W/2 - 6, H/2);
+  ctx.moveTo(W/2 + 6, H/2);
+  ctx.lineTo(W/2 + 18, H/2);
+  ctx.moveTo(W/2, H/2 - 18);
+  ctx.lineTo(W/2, H/2 - 6);
+  ctx.moveTo(W/2, H/2 + 6);
+  ctx.lineTo(W/2, H/2 + 18);
+  ctx.stroke();
+
+  // small center dot
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.beginPath();
+  ctx.arc(W/2, H/2, 3, 0, Math.PI*2);
+  ctx.fill();
+
+  // simple reticle distance indicator (number of enemies remaining)
+  ctx.fillStyle = "#fff";
+  ctx.font = "12px system-ui, Arial";
+  ctx.fillText(`${enemies.filter(e=>!e.dead).length} alive`, 12, H - 14);
+}
+
+/* Movement and world collision (keep inside bounds) */
+function updatePlayer(dt) {
+  let mvx = 0, mvy = 0;
+  if (keys['w']) { mvy += 1; }
+  if (keys['s']) { mvy -= 1; }
+  if (keys['a']) { mvx -= 1; }
+  if (keys['d']) { mvx += 1; }
+
+  // normalize
+  const len = Math.hypot(mvx, mvy);
+  if (len > 0) { mvx /= len; mvy /= len; }
+
+  // translate relative to player's angle: forward is +y in world coords for angle=0
+  const forwardX = Math.cos(player.angle), forwardY = Math.sin(player.angle);
+  const rightX = Math.cos(player.angle + Math.PI/2), rightY = Math.sin(player.angle + Math.PI/2);
+
+  player.x += (forwardX * mvy + rightX * mvx) * player.speed * dt;
+  player.y += (forwardY * mvy + rightY * mvx) * player.speed * dt;
+
+  // clamp to bounds
+  player.x = Math.max(-world.bounds, Math.min(world.bounds, player.x));
+  player.y = Math.max(-world.bounds, Math.min(world.bounds, player.y));
+
+  // respawn health if dead (press R), or automatically if below zero limited
+  if (keys['r']) {
+    player.health = 100;
+    spawnEnemies(6);
+    keys['r'] = false; // prevent repeat triggers
+  }
+}
+
+/* HUD update */
+function updateHUD() {
+  document.getElementById('enemyCount').textContent = enemies.filter(e=>!e.dead).length;
+  document.getElementById('health').textContent = Math.round(player.health);
+}
+
+/* Game loop */
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (player.health > 0) {
+    updatePlayer(dt);
+    updateEnemies(dt);
+  }
+  render();
+  updateHUD();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* initial placement */
+player.x = 0; player.y = 0; player.angle = 0;
+spawnEnemies(6);
+
+/* pointer lock advice */
+canvas.style.cursor = 'crosshair';
+
+/* UI buttons */
+document.getElementById('spawnBtn').addEventListener('click', () => spawnEnemies(6));
+
+/* Helpful: expose simple functions for debugging in console */
+window.__GAME = { player, enemies, spawnEnemies, shoot };
+
+/* Prevent right-click context to keep pointer interactions clean */
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+</script>
 </body>
 </html>
