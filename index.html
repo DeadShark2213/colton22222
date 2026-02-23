@@ -3,352 +3,459 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tiny FPS Template — Stickman</title>
+<title>Five Nights at Freddy's - Game Template</title>
 <style>
-  html,body { height:100%; margin:0; background:#000; overflow:hidden; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; color:#eee; }
-  canvas { display:block; background:#6fb0ff; } /* sky color; ground drawn in canvas too */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; font-family: 'Arial', sans-serif; background: #1a1a1a; color: #fff; }
+  
+  body { display: flex; overflow: hidden; }
+  
+  #mainView {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    position: relative;
+  }
+  
+  #cameraFeed {
+    flex: 1;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 3px solid #00ff00;
+  }
+  
+  #gameCanvas {
+    width: 100%;
+    height: 100%;
+    background: #111;
+  }
+  
+  #officeView {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #2c3e50, #34495e);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .office-element {
+    position: absolute;
+    background: #5a5a5a;
+    border: 2px solid #333;
+    border-radius: 4px;
+  }
+  
+  #deskL { left: 20px; bottom: 40px; width: 120px; height: 80px; background: #3d3d3d; }
+  #deskR { right: 20px; bottom: 40px; width: 120px; height: 80px; background: #3d3d3d; }
+  
+  .door {
+    position: absolute;
+    width: 100px;
+    height: 150px;
+    background: #8b4513;
+    border: 3px solid #5c2e0a;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .door:hover { opacity: 0.8; }
+  .door.locked { background: #b91c1c; }
+  .door.open { background: #4caf50; }
+  
+  #leftDoor { left: 40px; top: 50%; transform: translateY(-50%); }
+  #rightDoor { right: 40px; top: 50%; transform: translateY(-50%); }
+  
   #hud {
-    position: absolute; left:12px; top:12px; z-index:10;
-    background:rgba(0,0,0,0.35); padding:8px 10px; border-radius:6px; font-size:13px;
+    background: #0a0a0a;
+    padding: 15px;
+    border-top: 2px solid #00ff00;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
   }
-  #instructions {
-    position:absolute; left:50%; transform:translateX(-50%); bottom:20px; z-index:10;
-    background:rgba(0,0,0,0.45); color:#fff; padding:8px 12px; border-radius:6px; font-size:13px;
+  
+  .stat-box {
+    background: #1a1a1a;
+    border: 2px solid #00ff00;
+    padding: 12px;
+    border-radius: 4px;
+    text-align: center;
   }
-  button { margin-left:8px; }
+  
+  .stat-label {
+    font-size: 12px;
+    color: #00cc00;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #00ff00;
+  }
+  
+  .stat-value.critical { color: #ff0000; animation: blink 0.5s infinite; }
+  
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  
+  #sidePanel {
+    width: 250px;
+    background: #0a0a0a;
+    border-left: 3px solid #00ff00;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .panel-title {
+    color: #00ff00;
+    font-size: 14px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #00ff00;
+    padding-bottom: 8px;
+  }
+  
+  .animatronic-status {
+    background: #1a1a1a;
+    border: 1px solid #00ff00;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  
+  .animatronic-status.active { background: #2d4d2d; color: #00ff00; }
+  .animatronic-status.warning { background: #4d4d2d; color: #ffff00; }
+  .animatronic-status.threat { background: #4d2d2d; color: #ff0000; }
+  
+  #cameraButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 15px;
+  }
+  
+  .camera-btn {
+    background: #1a1a1a;
+    border: 2px solid #00ff00;
+    color: #00ff00;
+    padding: 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  
+  .camera-btn:hover { background: #00ff00; color: #000; }
+  .camera-btn.active { background: #00ff00; color: #000; font-weight: bold; }
+  
+  .night-info {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.7);
+    padding: 15px 20px;
+    border: 2px solid #00ff00;
+    border-radius: 4px;
+    text-align: right;
+  }
+  
+  .time { font-size: 24px; font-weight: bold; color: #00ff00; }
+  .time-label { font-size: 12px; color: #00cc00; margin-bottom: 5px; }
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<div id="hud">
-  <div>Enemies: <span id="enemyCount">0</span></div>
-  <div>Health: <span id="health">100</span></div>
-  <div style="margin-top:6px;font-size:12px;color:#ddd">Click to lock pointer, click to shoot</div>
+
+<div id="mainView">
+  <div id="cameraFeed">
+    <div id="officeView">
+      <div class="office-element" id="deskL"></div>
+      <div class="office-element" id="deskR"></div>
+      <div class="door" id="leftDoor">LEFT DOOR</div>
+      <div class="door" id="rightDoor">RIGHT DOOR</div>
+      <div class="night-info">
+        <div class="time-label">Current Time</div>
+        <div class="time" id="gameTime">12:00 AM</div>
+        <div style="font-size: 12px; margin-top: 10px; color: #00cc00;" id="nightLabel">Night 1</div>
+      </div>
+    </div>
+    <canvas id="gameCanvas" style="display:none;"></canvas>
+  </div>
+  
+  <div id="hud">
+    <div class="stat-box">
+      <div class="stat-label">Power</div>
+      <div class="stat-value" id="powerDisplay">100%</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Left Door</div>
+      <div class="stat-value" id="leftDoorPower">CLOSED</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Right Door</div>
+      <div class="stat-value" id="rightDoorPower">CLOSED</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Status</div>
+      <div class="stat-value" id="status">SAFE</div>
+    </div>
+  </div>
 </div>
-<div id="instructions">
-  Controls: W/A/S/D to move, mouse to look. R to respawn enemies. Esc to release pointer.
-  <button id="spawnBtn">Spawn 6</button>
+
+<div id="sidePanel">
+  <div class="panel-title">Animatronics</div>
+  <div class="animatronic-status" id="freddy">
+    <strong>Freddy Fazbear</strong><br>
+    Location: Stage
+  </div>
+  <div class="animatronic-status" id="bonnie">
+    <strong>Bonnie</strong><br>
+    Location: Stage
+  </div>
+  <div class="animatronic-status" id="chica">
+    <strong>Chica</strong><br>
+    Location: Stage
+  </div>
+  <div class="animatronic-status" id="foxy">
+    <strong>Foxy</strong><br>
+    Location: Pirate Cove
+  </div>
+  
+  <div class="panel-title" style="margin-top: 20px;">Cameras</div>
+  <div id="cameraButtons">
+    <button class="camera-btn" data-camera="0">CAM 1A - Stage</button>
+    <button class="camera-btn" data-camera="1">CAM 1B - Tables</button>
+    <button class="camera-btn" data-camera="2">CAM 2A - Pirate Cove</button>
+    <button class="camera-btn" data-camera="3">CAM 3 - Backstage</button>
+    <button class="camera-btn" data-camera="4">CAM 4 - East Hall</button>
+    <button class="camera-btn" data-camera="5">CAM 5 - West Hall</button>
+  </div>
 </div>
 
 <script>
-/*
- Tiny FPS-like template (first-person projection onto canvas).
- - WASD movement
- - Pointer lock + mouse look
- - Crosshair in center
- - Enemies are simple "stickmen" drawn with lines and scaled by distance (pseudo-3D)
- - Left click to shoot (ray/angle hit detection). Enemies chase player.
- - Single-file, vanilla JS. Expand as you like.
-*/
-
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-
-let W = canvas.width = innerWidth;
-let H = canvas.height = innerHeight;
-window.addEventListener('resize', () => { W = canvas.width = innerWidth; H = canvas.height = innerHeight; });
-
-/* Player */
-const player = {
-  x: 0, y: 0, // world coords
-  angle: 0,   // radians, 0 => facing +Y
-  speed: 160, // units/sec
-  turnSpeed: 0.004,
-  health: 100
+// Game State
+const gameState = {
+  night: 1,
+  wave: 0, // 12 AM to 6 AM = waves 0-5
+  power: 100,
+  maxPower: 100,
+  leftDoorClosed: true,
+  rightDoorClosed: true,
+  leftDoorPowerUsage: 1,
+  rightDoorPowerUsage: 1,
+  gameOver: false,
+  survived: false,
+  currentCamera: 0,
+  animatronics: {
+    freddy: { location: 'Stage', threat: 0, moveSpeed: 0.8 },
+    bonnie: { location: 'Stage', threat: 0, moveSpeed: 0.9 },
+    chica: { location: 'Stage', threat: 0, moveSpeed: 0.85 },
+    foxy: { location: 'Pirate Cove', threat: 0, moveSpeed: 1.2 }
+  }
 };
 
-/* World bounds (simple open area) */
-const world = {
-  bounds: 2000, // +/- bounds in world coordinates
-};
+// DOM Elements
+const powerDisplay = document.getElementById('powerDisplay');
+const leftDoorPower = document.getElementById('leftDoorPower');
+const rightDoorPower = document.getElementById('rightDoorPower');
+const statusDisplay = document.getElementById('status');
+const gameTime = document.getElementById('gameTime');
+const nightLabel = document.getElementById('nightLabel');
+const leftDoorBtn = document.getElementById('leftDoor');
+const rightDoorBtn = document.getElementById('rightDoor');
+const cameraBtns = document.querySelectorAll('.camera-btn');
 
-/* Camera / projection settings */
-const FOV = Math.PI / 3.5; // ~51 degrees
-function projPlaneDist() { return (W / 2) / Math.tan(FOV / 2); }
+// Door Controls
+leftDoorBtn.addEventListener('click', () => toggleDoor('left'));
+rightDoorBtn.addEventListener('click', () => toggleDoor('right'));
 
-/* Input state */
-const keys = {};
-let pointerLocked = false;
-document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+function toggleDoor(side) {
+  if (side === 'left') {
+    gameState.leftDoorClosed = !gameState.leftDoorClosed;
+    leftDoorBtn.classList.toggle('locked', gameState.leftDoorClosed);
+    leftDoorBtn.classList.toggle('open', !gameState.leftDoorClosed);
+  } else {
+    gameState.rightDoorClosed = !gameState.rightDoorClosed;
+    rightDoorBtn.classList.toggle('locked', gameState.rightDoorClosed);
+    rightDoorBtn.classList.toggle('open', !gameState.rightDoorClosed);
+  }
+}
 
-canvas.addEventListener('click', () => {
-  if (!pointerLocked) canvas.requestPointerLock?.();
-  else shoot();
+// Camera Controls
+cameraBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    cameraBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    gameState.currentCamera = parseInt(btn.dataset.camera);
+  });
 });
-document.addEventListener('pointerlockchange', () => {
-  pointerLocked = (document.pointerLockElement === canvas);
-});
-document.addEventListener('mousemove', (e) => {
-  if (!pointerLocked) return;
-  player.angle += e.movementX * -0.0025; // sensitivity
-});
 
-/* Enemies */
-const enemies = [];
-const ENEMY_SPEED = 60;
-function spawnEnemies(n=6) {
-  enemies.length = 0;
-  for (let i=0;i<n;i++) {
-    const a = Math.random() * Math.PI*2;
-    const r = 300 + Math.random()*800;
-    enemies.push({
-      x: player.x + Math.cos(a)*r,
-      y: player.y + Math.sin(a)*r,
-      hp: 100,
-      dead: false,
-      id: Math.random().toString(36).slice(2,8),
-    });
-  }
-  updateHUD();
-}
-
-/* Basic chase behavior */
-function updateEnemies(dt) {
-  for (const e of enemies) {
-    if (e.dead) continue;
-    // move towards player
-    let dx = player.x - e.x;
-    let dy = player.y - e.y;
-    const dist = Math.hypot(dx,dy) || 1;
-    const nx = dx/dist, ny = dy/dist;
-    e.x += nx * ENEMY_SPEED * dt;
-    e.y += ny * ENEMY_SPEED * dt;
-    // simple melee damage if too close
-    if (dist < 28) {
-      player.health = Math.max(0, player.health - 20 * dt);
-      if (player.health === 0) {
-        // dead, freeze
-      }
-    }
-  }
-}
-
-/* Shooting: cast a ray from center; check nearest enemy within angle threshold and range */
-function shoot() {
-  const maxRange = 1200;
-  const hitAngle = Math.tan((30 * Math.PI/180)); // allow some tolerance, will check using lateral offset
-  let best = null;
-  for (const e of enemies) {
-    if (e.dead) continue;
-    // position relative to camera
-    const dx = e.x - player.x;
-    const dy = e.y - player.y;
-    // camera forward & right vectors
-    const fx = Math.cos(player.angle), fy = Math.sin(player.angle);
-    const rx = Math.cos(player.angle + Math.PI/2), ry = Math.sin(player.angle + Math.PI/2);
-    const forward = dx*fx + dy*fy; // z
-    const right = dx*rx + dy*ry;   // x side
-    if (forward <= 0) continue; // behind
-    if (forward > maxRange) continue;
-    const lateral = Math.abs(right / forward); // tan(angle)
-    // lateral threshold
-    if (lateral > hitAngle) continue;
-    const d = Math.hypot(dx,dy);
-    if (!best || d < best.dist) best = {enemy:e, dist:d};
-  }
-  if (best) {
-    best.enemy.hp -= 75;
-    if (best.enemy.hp <= 0) {
-      best.enemy.dead = true;
-      updateHUD();
-    }
-  }
-}
-
-/* Drawing utilities: draw stickman at screen position with a scale factor */
-function drawStickmanScreen(cx, cy, scale, color="#111", strokeStyle="#000") {
-  // head
-  ctx.strokeStyle = strokeStyle;
-  ctx.lineWidth = Math.max(1, Math.round(scale*0.06));
-  ctx.beginPath();
-  ctx.arc(cx, cy - scale*0.55, scale*0.22, 0, Math.PI*2);
-  ctx.stroke();
-  // body
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - scale*0.33);
-  ctx.lineTo(cx, cy + scale*0.2);
-  // arms
-  ctx.moveTo(cx - scale*0.4, cy - scale*0.05);
-  ctx.lineTo(cx + scale*0.4, cy - scale*0.05);
-  // legs
-  ctx.moveTo(cx, cy + scale*0.2);
-  ctx.lineTo(cx - scale*0.35, cy + scale*0.7);
-  ctx.moveTo(cx, cy + scale*0.2);
-  ctx.lineTo(cx + scale*0.35, cy + scale*0.7);
-  ctx.stroke();
-  // fill head simple
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(cx, cy - scale*0.55, scale*0.1, 0, Math.PI*2);
-  ctx.fill();
-}
-
-/* Render scene: sky, ground, simple horizon, enemies projected */
-function render() {
-  // background: sky and ground
-  ctx.clearRect(0,0,W,H);
-  // sky gradient
-  const g = ctx.createLinearGradient(0,0,0,H*0.6);
-  g.addColorStop(0, "#6fb0ff");
-  g.addColorStop(1, "#87c97a");
-  ctx.fillStyle = g;
-  ctx.fillRect(0,0,W,H);
-
-  // horizon line
-  const horizonY = H * 0.45;
-  ctx.fillStyle = "#3c6b3a";
-  ctx.fillRect(0, horizonY, W, H - horizonY);
-
-  // draw a faint grid on ground to give depth
-  ctx.save();
-  ctx.translate(W/2, horizonY + 80); // visual offset
-  ctx.strokeStyle = "rgba(0,0,0,0.06)";
-  for (let i=50;i<5000;i+=100) {
-    const scale = projPlaneDist()/i;
-    const lineY = scale * 120;
-    if (lineY > H) break;
-    ctx.beginPath();
-    ctx.moveTo(-W, lineY);
-    ctx.lineTo(W, lineY);
-    ctx.stroke();
-  }
-  ctx.restore();
-
-  // project enemies
-  const proj = projPlaneDist();
-  const centerX = W/2;
-  const centerY = horizonY + 120; // baseline for vertical placement
-  // sort by depth (far to near)
-  const visible = [];
-  for (const e of enemies) {
-    if (e.dead) continue;
-    const dx = e.x - player.x;
-    const dy = e.y - player.y;
-    const fx = Math.cos(player.angle), fy = Math.sin(player.angle);
-    const rx = Math.cos(player.angle + Math.PI/2), ry = Math.sin(player.angle + Math.PI/2);
-    const forward = dx*fx + dy*fy;
-    const right = dx*rx + dy*ry;
-    if (forward <= 0.5) continue; // behind or too close
-    visible.push({e, forward, right});
-  }
-  visible.sort((a,b) => b.forward - a.forward); // far first (so near draws last)
-  for (const v of visible) {
-    const scale = proj / v.forward;
-    const screenX = centerX + v.right * scale;
-    const screenY = centerY + (1/scale) * 6 * 5; // slight offset by depth to emulate floor (tweakable)
-    // clamp scale to reasonable
-    const s = Math.min(220, Math.max(20, 120 * scale));
-    // draw enemy
-    drawStickmanScreen(screenX, screenY, s, "#222", "#031");
-    // hp bar
-    const barW = s * 0.9;
-    const barH = 6;
-    const bx = screenX - barW/2;
-    const by = screenY - s*0.85;
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillRect(bx-1, by-1, barW+2, barH+2);
-    ctx.fillStyle = "red";
-    ctx.fillRect(bx, by, barW * Math.max(0, v.e.hp/100), barH);
-  }
-
-  // draw player's small stick (lower center) to simulate body
-  const playerBodyScale = 42;
-  drawStickmanScreen(W/2, H*0.88, playerBodyScale, "#111", "#050");
-
-  // crosshair
-  ctx.strokeStyle = "rgba(255,255,255,0.95)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(W/2 - 18, H/2);
-  ctx.lineTo(W/2 - 6, H/2);
-  ctx.moveTo(W/2 + 6, H/2);
-  ctx.lineTo(W/2 + 18, H/2);
-  ctx.moveTo(W/2, H/2 - 18);
-  ctx.lineTo(W/2, H/2 - 6);
-  ctx.moveTo(W/2, H/2 + 6);
-  ctx.lineTo(W/2, H/2 + 18);
-  ctx.stroke();
-
-  // small center dot
-  ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.beginPath();
-  ctx.arc(W/2, H/2, 3, 0, Math.PI*2);
-  ctx.fill();
-
-  // simple reticle distance indicator (number of enemies remaining)
-  ctx.fillStyle = "#fff";
-  ctx.font = "12px system-ui, Arial";
-  ctx.fillText(`${enemies.filter(e=>!e.dead).length} alive`, 12, H - 14);
-}
-
-/* Movement and world collision (keep inside bounds) */
-function updatePlayer(dt) {
-  let mvx = 0, mvy = 0;
-  if (keys['w']) { mvy += 1; }
-  if (keys['s']) { mvy -= 1; }
-  if (keys['a']) { mvx -= 1; }
-  if (keys['d']) { mvx += 1; }
-
-  // normalize
-  const len = Math.hypot(mvx, mvy);
-  if (len > 0) { mvx /= len; mvy /= len; }
-
-  // translate relative to player's angle: forward is +y in world coords for angle=0
-  const forwardX = Math.cos(player.angle), forwardY = Math.sin(player.angle);
-  const rightX = Math.cos(player.angle + Math.PI/2), rightY = Math.sin(player.angle + Math.PI/2);
-
-  player.x += (forwardX * mvy + rightX * mvx) * player.speed * dt;
-  player.y += (forwardY * mvy + rightY * mvx) * player.speed * dt;
-
-  // clamp to bounds
-  player.x = Math.max(-world.bounds, Math.min(world.bounds, player.x));
-  player.y = Math.max(-world.bounds, Math.min(world.bounds, player.y));
-
-  // respawn health if dead (press R), or automatically if below zero limited
-  if (keys['r']) {
-    player.health = 100;
-    spawnEnemies(6);
-    keys['r'] = false; // prevent repeat triggers
-  }
-}
-
-/* HUD update */
+// Update HUD
 function updateHUD() {
-  document.getElementById('enemyCount').textContent = enemies.filter(e=>!e.dead).length;
-  document.getElementById('health').textContent = Math.round(player.health);
-}
-
-/* Game loop */
-let last = performance.now();
-function loop(now) {
-  const dt = Math.min(0.05, (now - last) / 1000);
-  last = now;
-  if (player.health > 0) {
-    updatePlayer(dt);
-    updateEnemies(dt);
+  powerDisplay.textContent = Math.max(0, Math.round(gameState.power)) + '%';
+  powerDisplay.classList.toggle('critical', gameState.power < 20);
+  
+  leftDoorPower.textContent = gameState.leftDoorClosed ? 'CLOSED' : 'OPEN';
+  leftDoorPower.style.color = gameState.leftDoorClosed ? '#00ff00' : '#ff0000';
+  
+  rightDoorPower.textContent = gameState.rightDoorClosed ? 'CLOSED' : 'OPEN';
+  rightDoorPower.style.color = gameState.rightDoorClosed ? '#00ff00' : '#ff0000';
+  
+  if (gameState.power <= 0) {
+    statusDisplay.textContent = 'BLACKOUT';
+    statusDisplay.style.color = '#ff0000';
+  } else if (gameState.power < 20) {
+    statusDisplay.textContent = 'CRITICAL';
+    statusDisplay.style.color = '#ff6600';
+  } else {
+    statusDisplay.textContent = 'SAFE';
+    statusDisplay.style.color = '#00ff00';
   }
-  render();
-  updateHUD();
-  requestAnimationFrame(loop);
 }
-requestAnimationFrame(loop);
 
-/* initial placement */
-player.x = 0; player.y = 0; player.angle = 0;
-spawnEnemies(6);
+// Update Animatronic Status
+function updateAnimatronicStatus() {
+  const animNames = ['freddy', 'bonnie', 'chica', 'foxy'];
+  animNames.forEach(name => {
+    const el = document.getElementById(name);
+    const anim = gameState.animatronics[name];
+    el.className = 'animatronic-status';
+    if (anim.threat > 75) el.classList.add('threat');
+    else if (anim.threat > 40) el.classList.add('warning');
+    else el.classList.add('active');
+    
+    el.innerHTML = `<strong>${name.charAt(0).toUpperCase() + name.slice(1)}</strong><br>
+                    Location: ${anim.location}<br>
+                    Threat Level: ${Math.round(anim.threat)}%`;
+  });
+}
 
-/* pointer lock advice */
-canvas.style.cursor = 'crosshair';
+// Game Time Update (12 AM to 6 AM, each "hour" is 30 seconds)
+let gameStartTime = Date.now();
+const GAME_HOUR_MS = 30000; // 30 seconds per in-game hour
 
-/* UI buttons */
-document.getElementById('spawnBtn').addEventListener('click', () => spawnEnemies(6));
+function updateTime() {
+  const elapsed = Date.now() - gameStartTime;
+  const hour = Math.floor((elapsed / GAME_HOUR_MS) % 6);
+  const minutes = Math.floor(((elapsed / GAME_HOUR_MS) % 1) * 60);
+  
+  const time = `${12 + hour}:${String(minutes).padStart(2, '0')} ${hour >= 6 ? 'AM' : 'AM'}`;
+  gameTime.textContent = time;
+  gameState.wave = hour;
+  
+  // Check if night is complete
+  if (hour >= 6) {
+    surviveNight();
+  }
+}
 
-/* Helpful: expose simple functions for debugging in console */
-window.__GAME = { player, enemies, spawnEnemies, shoot };
+// Power Usage (doors consume power)
+function updatePower(dt) {
+  let consumption = 0.5; // base consumption per second
+  
+  if (gameState.leftDoorClosed) consumption += gameState.leftDoorPowerUsage;
+  if (gameState.rightDoorClosed) consumption += gameState.rightDoorPowerUsage;
+  
+  gameState.power -= (consumption * dt) / 1000;
+  gameState.power = Math.max(0, gameState.power);
+}
 
-/* Prevent right-click context to keep pointer interactions clean */
-canvas.addEventListener('contextmenu', e => e.preventDefault());
+// Animatronics AI
+function updateAnimatronics(dt) {
+  const animNames = Object.keys(gameState.animatronics);
+  
+  animNames.forEach(name => {
+    const anim = gameState.animatronics[name];
+    
+    // Increase threat over time (more aggressive later in night)
+    anim.threat += (gameState.wave + 1) * 0.5 * dt / 1000;
+    anim.threat = Math.min(100, anim.threat);
+    
+    // Doors reduce threat
+    if ((name === 'freddy' || name === 'bonnie') && gameState.leftDoorClosed) {
+      anim.threat -= 2 * dt / 1000;
+    }
+    if ((name === 'chica' || name === 'foxy') && gameState.rightDoorClosed) {
+      anim.threat -= 2 * dt / 1000;
+    }
+    
+    anim.threat = Math.max(0, anim.threat);
+    
+    // Check if animatronic reaches office
+    if (anim.threat >= 100) {
+      gameOver('An animatronic reached the office!');
+    }
+  });
+}
+
+// Game Over
+function gameOver(reason) {
+  gameState.gameOver = true;
+  alert(`GAME OVER!\n${reason}\n\nYou survived until ${gameState.wave}:00`);
+  location.reload();
+}
+
+// Survive Night
+function surviveNight() {
+  gameState.survived = true;
+  alert(`NIGHT ${gameState.night} SURVIVED!\n\nYou made it through the night!`);
+  gameState.night++;
+  gameState.wave = 0;
+  gameStartTime = Date.now();
+  gameState.power = 100;
+  gameState.animatronics.freddy.threat = 0;
+  gameState.animatronics.bonnie.threat = 0;
+  gameState.animatronics.chica.threat = 0;
+  gameState.animatronics.foxy.threat = 0;
+  nightLabel.textContent = `Night ${gameState.night}`;
+}
+
+// Game Loop
+let lastTime = Date.now();
+function gameLoop() {
+  const now = Date.now();
+  const dt = now - lastTime;
+  lastTime = now;
+  
+  if (!gameState.gameOver) {
+    updateTime();
+    updatePower(dt);
+    updateAnimatronics(dt);
+    updateHUD();
+    updateAnimatronicStatus();
+  }
+  
+  requestAnimationFrame(gameLoop);
+}
+
+// Initialize
+updateHUD();
+updateAnimatronicStatus();
+cameraBtns[0].classList.add('active');
+requestAnimationFrame(gameLoop);
+
+// Keyboard Controls
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft') toggleDoor('left');
+  if (e.key === 'ArrowRight') toggleDoor('right');
+});
 </script>
+
 </body>
 </html>
