@@ -10,7 +10,7 @@
     </style>
 </head>
 <body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let scene, camera, renderer, gorilla, basePlate;
         let isJumping = false;
@@ -107,11 +107,9 @@
                     movement.z = 1; 
                     break;
                 case 'ArrowLeft': // Look left
-                case 'a': // Look left (A key)
                     gorilla.rotation.y += rotationSpeed; // Fixed direction
                     break;
                 case 'ArrowRight': // Look right
-                case 'd': // Look right (D key)
                     gorilla.rotation.y -= rotationSpeed; // Fixed direction
                     break;
                 case ' ': // Jump
