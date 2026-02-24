@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,15 +10,15 @@
         canvas { display: block; }
     </style>
 </head>
+
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        let scene, camera, renderer, gorilla, basePlate;
-        let mouseX = 0, mouseY = 0;
-        let isJumping = false;
+        let scene, camera, renderer, gorilla, stick, isJumping = false;
         let jumpVelocity = 0.2; // Vertical jumping speed
         let gravity = -0.01; // Gravity effect
         let groundY = 0.5; // Height of the ground (gorilla's y position)
+        let hasStick = false; // To track whether the gorilla picked up the stick
         const trees = []; // Array to hold tree objects for collision detection
 
         function init() {
@@ -32,7 +33,6 @@
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setClearColor(0x87CEEB); // Set the background color to sky blue
-            renderer.shadowMap.enabled = false; // Disable shadows
             document.body.appendChild(renderer.domElement);
 
             // Add a light source
@@ -44,35 +44,21 @@
             // Create a square base plate (grass)
             const plateGeometry = new THREE.BoxGeometry(50, 0.1, 50);
             const plateMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
-            basePlate = new THREE.Mesh(plateGeometry, plateMaterial);
+            const basePlate = new THREE.Mesh(plateGeometry, plateMaterial);
             basePlate.position.y = -0.05;
             scene.add(basePlate);
 
             // Create the gorilla shape
             gorilla = new THREE.Group();
-
-            // Gorilla body
             const bodyGeometry = new THREE.SphereGeometry(0.5, 32, 32);
             const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 });
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
             gorilla.add(body);
-
-            // Gorilla arms
-            const armGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
-            const armMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 });
-            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-            leftArm.position.set(-0.7, 0, 0);
-            leftArm.rotation.z = Math.PI / 4;
-            gorilla.add(leftArm);
-
-            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-            rightArm.position.set(0.7, 0, 0);
-            rightArm.rotation.z = -Math.PI / 4;
-            gorilla.add(rightArm);
-
-            // Set gorilla position
             gorilla.position.y = groundY; // Above the base plate
             scene.add(gorilla);
+
+            // Create the stick
+            createStick();
 
             // Add large trees around the base plate
             addLargeTrees();
@@ -84,13 +70,20 @@
             window.addEventListener('mousemove', onMouseMove);
         }
 
+        function createStick() {
+            const stickGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1, 12);
+            const stickMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+            stick = new THREE.Mesh(stickGeometry, stickMaterial);
+            stick.position.set(0, 0.5, -5); // Initial position of the stick
+            scene.add(stick);
+        }
+
         function addLargeTrees() {
             const treeTrunkGeometry = new THREE.CylinderGeometry(0.5, 0.75, 10, 8); // Larger tree trunk
             const treeTrunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
             const treeLeavesGeometry = new THREE.SphereGeometry(1.5, 16, 16); // Larger tree leaves
             const treeLeavesMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
 
-            // Example positions for trees
             const treePositions = [
                 { x: -20, z: 0 },
                 { x: -15, z: -5 },
@@ -103,13 +96,11 @@
             ];
 
             treePositions.forEach(pos => {
-                // Create trunk
                 const trunk = new THREE.Mesh(treeTrunkGeometry, treeTrunkMaterial);
                 trunk.position.set(pos.x, 5, pos.z); // Position the trunk higher
                 scene.add(trunk);
-                trees.push(trunk); // Add to trees array for collision detection
+                trees.push(trunk);
 
-                // Create leaves
                 const leaves = new THREE.Mesh(treeLeavesGeometry, treeLeavesMaterial);
                 leaves.position.set(pos.x, 10, pos.z); // Position leaves above trunk
                 scene.add(leaves);
@@ -120,101 +111,103 @@
             requestAnimationFrame(animate);
             updateGorillaPosition(); // Update gorilla position based on movement
 
-            // Update gorilla rotation to face mouse direction
             gorilla.rotation.y = Math.atan2(mouseX, mouseY);
 
-            // Update camera to follow gorilla's position
             camera.position.x = gorilla.position.x + 5 * Math.sin(gorilla.rotation.y);
             camera.position.z = gorilla.position.z + 5 * Math.cos(gorilla.rotation.y);
-            camera.position.y = 2; // Keep camera height consistent
-            camera.lookAt(gorilla.position); // Always look at the gorilla
+            camera.position.y = 2;
+            camera.lookAt(gorilla.position);
 
-            // Apply gravity
             if (isJumping) {
                 gorilla.position.y += jumpVelocity;
                 jumpVelocity += gravity;
 
-                // Check if gorilla hits the ground
                 if (gorilla.position.y <= groundY) {
-                    gorilla.position.y = groundY; // Reset position to ground height
-                    isJumping = false; // Reset jumping flag
-                    jumpVelocity = 0.2; // Reset jump velocity
+                    gorilla.position.y = groundY;
+                    isJumping = false;
+                    jumpVelocity = 0.2;
                 }
             }
 
             // Check for collisions with trees
             trees.forEach(tree => {
                 if (checkCollision(gorilla, tree)) {
-                    // If a collision is detected, reset the gorilla's position
-                    gorilla.position.y = groundY; // Optionally place gorilla at ground level on collision
+                    gorilla.position.y = groundY; // Place gorilla at ground level on collision
                 }
             });
+
+            // Check if gorilla can pick up the stick
+            if (!hasStick && checkCollision(gorilla, stick)) {
+                console.log("Press 'E' to pick up the stick");
+            }
 
             renderer.render(scene, camera);
         }
 
-        // Movement logic
         let movement = new THREE.Vector3();
 
         function onKeyDown(event) {
-            switch(event.key) {
-                case 'w': // Move forward
-                    movement.z = -1; // Set speed
+            switch (event.key) {
+                case 'w':
+                    movement.z = -1;
                     break;
-                case 's': // Move backward
-                    movement.z = 1; // Set speed
+                case 's':
+                    movement.z = 1;
                     break;
-                case 'a': // Move left
-                    movement.x = -1; // Set speed
+                case 'a':
+                    movement.x = -1;
                     break;
-                case 'd': // Move right
-                    movement.x = 1; // Set speed
+                case 'd':
+                    movement.x = 1;
                     break;
-                case ' ': // Jump
-                    if (!isJumping) { // Only jump if not already jumping
+                case ' ':
+                    if (!isJumping) {
                         isJumping = true;
-                        jumpVelocity = 0.2; // Reset jump velocity to initiate jump
+                        jumpVelocity = 0.2;
+                    }
+                    break;
+                case 'e':
+                    if (!hasStick && checkCollision(gorilla, stick)) {
+                        hasStick = true; // Gorilla picks up the stick
+                        console.log("Stick picked up!");
+                        stick.visible = false; // Hide stick after pickup
                     }
                     break;
             }
         }
 
         function onKeyUp(event) {
-            switch(event.key) {
+            switch (event.key) {
                 case 'w':
                 case 's':
-                    movement.z = 0; // Stop moving forward/backward
+                    movement.z = 0;
                     break;
                 case 'a':
                 case 'd':
-                    movement.x = 0; // Stop moving left/right
+                    movement.x = 0;
                     break;
             }
         }
 
         function updateGorillaPosition() {
-            const speed = 0.1; // Movement speed
+            const speed = 0.1;
 
-            // Adjust movement based on gorilla's current rotation
             gorilla.position.x += (movement.z * Math.sin(gorilla.rotation.y) + movement.x * Math.cos(gorilla.rotation.y)) * speed;
             gorilla.position.z += (movement.z * Math.cos(gorilla.rotation.y) - movement.x * Math.sin(gorilla.rotation.y)) * speed;
         }
 
-        // Collision detection function
-        function checkCollision(gorilla, tree) {
+        function checkCollision(gorilla, object) {
             const gorillaBox = new THREE.Box3().setFromObject(gorilla);
-            const treeBox = new THREE.Box3().setFromObject(tree);
-            return gorillaBox.intersectsBox(treeBox);
+            const objectBox = new THREE.Box3().setFromObject(object);
+            return gorillaBox.intersectsBox(objectBox);
         }
 
-        // Handle mouse move
         function onMouseMove(event) {
-            mouseX = (event.clientX / window.innerWidth) * 2 - 1; // Normalize to -1 to 1
-            mouseY = (event.clientY / window.innerHeight) * 2 - 1; // Normalize to -1 to 1
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = (event.clientY / window.innerHeight) * 2 - 1;
         }
 
-        // Handle window resizing
-        window.addEventListener('resize', function() {
+        window.addEventListener('resize', function () {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -227,4 +220,5 @@
         init();
     </script>
 </body>
+
 </html>
