@@ -136,7 +136,7 @@
 
                 // Check if gorilla hits the ground
                 if (gorilla.position.y <= groundY) {
-                    gorilla.position.y = groundY; // Reset position
+                    gorilla.position.y = groundY; // Reset position to ground height
                     isJumping = false; // Reset jumping flag
                     jumpVelocity = 0.2; // Reset jump velocity
                 }
@@ -173,6 +173,7 @@
                 case ' ': // Jump
                     if (!isJumping) { // Only jump if not already jumping
                         isJumping = true;
+                        jumpVelocity = 0.2; // Reset jump velocity to initiate jump
                     }
                     break;
             }
