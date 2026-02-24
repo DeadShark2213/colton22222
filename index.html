@@ -70,51 +70,18 @@
             rightArm.rotation.z = -Math.PI / 4;
             gorilla.add(rightArm);
 
-            // Set gorilla position inside the stump
-            gorilla.position.set(0, groundY + 3, 0); // Positioned inside stump
+            // Set gorilla position on the ground
+            gorilla.position.set(0, groundY + 1.5, 0); // Positioned above the ground
             scene.add(gorilla);
 
             // Add large trees around the base plate
             addLargeTrees();
-
-            // Add giant tree stump
-            addGiantTreeStump();
 
             // Start the animation loop
             animate();
 
             // Mouse move listener
             window.addEventListener('mousemove', onMouseMove);
-        }
-
-        function addGiantTreeStump() {
-            const treeStumpGeometry = new THREE.CylinderGeometry(5, 7, 20, 8); // Huge tree stump dimensions
-            const treeStumpMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, transparent: true, opacity: 0.7 });
-            const treeStump = new THREE.Mesh(treeStumpGeometry, treeStumpMaterial);
-            treeStump.position.set(0, 10, 0); // Centered position
-            scene.add(treeStump);
-
-            // Hollow inside of stump
-            const hollowGeometry = new THREE.CylinderGeometry(4.5, 6.5, 20, 8); 
-            const hollowMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.BackSide }); // Back side for hollow effect
-            const hollowInside = new THREE.Mesh(hollowGeometry, hollowMaterial);
-            hollowInside.position.set(0, 10, 0);
-            scene.add(hollowInside);
-
-            // Create a staircase leading up
-            addStaircase(treeStump.position);
-        }
-
-        function addStaircase(position) {
-            const stepGeometry = new THREE.BoxGeometry(2, 0.2, 1);
-            const stepMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-            const steps = 10; // Number of steps
-            for (let i = 0; i < steps; i++) {
-                const step = new THREE.Mesh(stepGeometry, stepMaterial);
-                step.position.set(position.x, position.y + (i * 2), position.z - 8); // Position steps along the y-axis
-                step.rotation.x = Math.PI / 5; // Slight angle for incline
-                scene.add(step);
-            }
         }
 
         function addLargeTrees() {
