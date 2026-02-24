@@ -13,7 +13,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let scene, camera, renderer, gorilla, basePlate;
-        let mouseX = 0, mouseY = 0;
         let isJumping = false;
         let jumpVelocity = 0.2; // Vertical jumping speed
         let gravity = -0.01; // Gravity effect
@@ -57,22 +56,19 @@
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
             gorilla.add(body);
 
-            // Gorilla arms
-            const armGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
-            const armMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 });
-            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-            leftArm.position.set(-0.7, 0, 0);
-            leftArm.rotation.z = Math.PI / 4;
-            gorilla.add(leftArm);
+            // Gorilla arms positioned as legs
+            const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
+            const legMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 });
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(-0.7, -1.5, 0); // Positioned as a leg
+            gorilla.add(leftLeg);
 
-            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-            rightArm.position.set(0.7, 0, 0);
-            rightArm.rotation.z = -Math.PI / 4;
-            gorilla.add(rightArm);
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(0.7, -1.5, 0); // Positioned as a leg
+            gorilla.add(rightLeg);
 
-            // Position gorilla on its arms
-            gorilla.position.set(0, groundY + 1.5, 0); // Positioned above the ground
-            gorilla.rotation.x = -Math.PI / 2; // Rotate to stand on arms
+            // Position gorilla and adjust rotation
+            gorilla.position.set(0, groundY + 1.5, 0);
             scene.add(gorilla);
 
             // Add large trees around the base plate
@@ -80,8 +76,6 @@
 
             // Start the animation loop
             animate();
-
-            // Mouse move listener removed
         }
 
         function addLargeTrees() {
@@ -121,9 +115,10 @@
             updateGorillaPosition(); // Update gorilla position based on movement
             applyWalkingAnimation(); // Apply walking animation
 
-            // Update camera to follow gorilla's position
-            camera.position.x = gorilla.position.x + 5 * Math.sin(gorilla.rotation.y);
-            camera.position.z = gorilla.position.z + 5 * Math.cos(gorilla.rotation.y);
+            // Update camera
+            const angleOffset = gorilla.rotation.y; // Adjust camera based on gorilla's orientation
+            camera.position.x = gorilla.position.x + 5 * Math.sin(angleOffset);
+            camera.position.z = gorilla.position.z + 5 * Math.cos(angleOffset);
             camera.position.y = 5; // Keep camera height consistent
             camera.lookAt(gorilla.position); // Always look at the gorilla
 
@@ -156,16 +151,16 @@
 
         function onKeyDown(event) {
             switch(event.key) {
-                case 'ArrowUp': // Move forward
+                case 'w': // Move forward
                     movement.z = -1; // Set speed
                     break;
-                case 'ArrowDown': // Move backward
+                case 's': // Move backward
                     movement.z = 1; // Set speed
                     break;
-                case 'ArrowLeft': // Rotate left
+                case 'a': // Rotate left
                     gorilla.rotation.y += 0.05; // Rotate
                     break;
-                case 'ArrowRight': // Rotate right
+                case 'd': // Rotate right
                     gorilla.rotation.y -= 0.05; // Rotate
                     break;
                 case ' ': // Jump
@@ -179,8 +174,8 @@
 
         function onKeyUp(event) {
             switch(event.key) {
-                case 'ArrowUp':
-                case 'ArrowDown':
+                case 'w':
+                case 's':
                     movement.z = 0; // Stop moving forward/backward
                     break;
             }
@@ -213,11 +208,11 @@
 
         function applyWalkingAnimation() {
             angle += 0.1; // Increment angle for animation
-            const armMovement = Math.sin(angle); // Create a back and forth motion
+            const legMovement = Math.sin(angle); // Create a back and forth motion
 
-            // Update arm positions to simulate walking
-            gorilla.children[1].position.y = armMovement * 0.2; // Left arm
-            gorilla.children[2].position.y = -armMovement * 0.2; // Right arm
+            // Update leg positions to simulate walking
+            gorilla.children[1].position.y = -1.5 + legMovement * 0.1; // Left leg
+            gorilla.children[2].position.y = -1.5 - legMovement * 0.1; // Right leg
         }
 
         // Collision detection function
