@@ -159,10 +159,10 @@
                     movement.z = 1; // Set speed
                     break;
                 case 'ArrowLeft': // Look left
-                    gorilla.rotation.y -= rotationSpeed; // Smooth turn left
+                    gorilla.rotation.y += rotationSpeed; // Switch to look left
                     break;
                 case 'ArrowRight': // Look right
-                    gorilla.rotation.y += rotationSpeed; // Smooth turn right
+                    gorilla.rotation.y -= rotationSpeed; // Switch to look right
                     break;
                 case ' ': // Jump
                     if (!isJumping) { // Only jump if not already jumping
