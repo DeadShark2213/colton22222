@@ -19,6 +19,7 @@
         let groundY = 0.5; // Height of the ground (gorilla's y position)
         const trees = []; // Array to hold tree objects for collision detection
         const rotationSpeed = 0.02; // Speed for smooth rotation
+        let targetRotationY = 0; // Target rotation for smooth turning
 
         function init() {
             // Create the scene
@@ -116,6 +117,9 @@
             updateGorillaPosition(); // Update gorilla position based on movement
             applyWalkingAnimation(); // Apply walking animation
 
+            // Smoothly rotate gorilla towards target rotation
+            gorilla.rotation.y += (targetRotationY - gorilla.rotation.y) * 0.1; // Smooth transition
+
             // Update camera
             const angleOffset = gorilla.rotation.y; // Adjust camera based on gorilla's orientation
             camera.position.x = gorilla.position.x + 5 * Math.sin(angleOffset);
@@ -159,10 +163,10 @@
                     movement.z = 1; // Set speed
                     break;
                 case 'ArrowLeft': // Look left
-                    gorilla.rotation.y += rotationSpeed; // Switch to look left
+                    targetRotationY += rotationSpeed; // Set target rotation to look left
                     break;
                 case 'ArrowRight': // Look right
-                    gorilla.rotation.y -= rotationSpeed; // Switch to look right
+                    targetRotationY -= rotationSpeed; // Set target rotation to look right
                     break;
                 case ' ': // Jump
                     if (!isJumping) { // Only jump if not already jumping
