@@ -18,7 +18,7 @@
             // Create the scene
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer();
+            renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
@@ -33,6 +33,7 @@
             const gorillaGeometry = new THREE.SphereGeometry(0.5, 32, 32);
             const gorillaMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
             gorilla = new THREE.Mesh(gorillaGeometry, gorillaMaterial);
+            gorilla.position.y = 0.5; // Elevated above the base plate
             scene.add(gorilla);
 
             // Position the camera
@@ -91,6 +92,12 @@
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
         init();
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
     </script>
 </body>
 </html>
