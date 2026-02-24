@@ -1,461 +1,96 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Five Nights at Freddy's - Game Template</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; font-family: 'Arial', sans-serif; background: #1a1a1a; color: #fff; }
-  
-  body { display: flex; overflow: hidden; }
-  
-  #mainView {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    position: relative;
-  }
-  
-  #cameraFeed {
-    flex: 1;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    border: 3px solid #00ff00;
-  }
-  
-  #gameCanvas {
-    width: 100%;
-    height: 100%;
-    background: #111;
-  }
-  
-  #officeView {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to bottom, #2c3e50, #34495e);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .office-element {
-    position: absolute;
-    background: #5a5a5a;
-    border: 2px solid #333;
-    border-radius: 4px;
-  }
-  
-  #deskL { left: 20px; bottom: 40px; width: 120px; height: 80px; background: #3d3d3d; }
-  #deskR { right: 20px; bottom: 40px; width: 120px; height: 80px; background: #3d3d3d; }
-  
-  .door {
-    position: absolute;
-    width: 100px;
-    height: 150px;
-    background: #8b4513;
-    border: 3px solid #5c2e0a;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-weight: bold;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  
-  .door:hover { opacity: 0.8; }
-  .door.locked { background: #b91c1c; }
-  .door.open { background: #4caf50; }
-  
-  #leftDoor { left: 40px; top: 50%; transform: translateY(-50%); }
-  #rightDoor { right: 40px; top: 50%; transform: translateY(-50%); }
-  
-  #hud {
-    background: #0a0a0a;
-    padding: 15px;
-    border-top: 2px solid #00ff00;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-  }
-  
-  .stat-box {
-    background: #1a1a1a;
-    border: 2px solid #00ff00;
-    padding: 12px;
-    border-radius: 4px;
-    text-align: center;
-  }
-  
-  .stat-label {
-    font-size: 12px;
-    color: #00cc00;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-  }
-  
-  .stat-value {
-    font-size: 24px;
-    font-weight: bold;
-    color: #00ff00;
-  }
-  
-  .stat-value.critical { color: #ff0000; animation: blink 0.5s infinite; }
-  
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-  
-  #sidePanel {
-    width: 250px;
-    background: #0a0a0a;
-    border-left: 3px solid #00ff00;
-    padding: 15px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .panel-title {
-    color: #00ff00;
-    font-size: 14px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #00ff00;
-    padding-bottom: 8px;
-  }
-  
-  .animatronic-status {
-    background: #1a1a1a;
-    border: 1px solid #00ff00;
-    padding: 8px;
-    margin-bottom: 8px;
-    border-radius: 3px;
-    font-size: 12px;
-  }
-  
-  .animatronic-status.active { background: #2d4d2d; color: #00ff00; }
-  .animatronic-status.warning { background: #4d4d2d; color: #ffff00; }
-  .animatronic-status.threat { background: #4d2d2d; color: #ff0000; }
-  
-  #cameraButtons {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 15px;
-  }
-  
-  .camera-btn {
-    background: #1a1a1a;
-    border: 2px solid #00ff00;
-    color: #00ff00;
-    padding: 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 12px;
-    text-transform: uppercase;
-    transition: all 0.2s;
-  }
-  
-  .camera-btn:hover { background: #00ff00; color: #000; }
-  .camera-btn.active { background: #00ff00; color: #000; font-weight: bold; }
-  
-  .night-info {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(0,0,0,0.7);
-    padding: 15px 20px;
-    border: 2px solid #00ff00;
-    border-radius: 4px;
-    text-align: right;
-  }
-  
-  .time { font-size: 24px; font-weight: bold; color: #00ff00; }
-  .time-label { font-size: 12px; color: #00cc00; margin-bottom: 5px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Gorilla Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
 </head>
 <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, gorilla, basePlate;
 
-<div id="mainView">
-  <div id="cameraFeed">
-    <div id="officeView">
-      <div class="office-element" id="deskL"></div>
-      <div class="office-element" id="deskR"></div>
-      <div class="door" id="leftDoor">LEFT DOOR</div>
-      <div class="door" id="rightDoor">RIGHT DOOR</div>
-      <div class="night-info">
-        <div class="time-label">Current Time</div>
-        <div class="time" id="gameTime">12:00 AM</div>
-        <div style="font-size: 12px; margin-top: 10px; color: #00cc00;" id="nightLabel">Night 1</div>
-      </div>
-    </div>
-    <canvas id="gameCanvas" style="display:none;"></canvas>
-  </div>
-  
-  <div id="hud">
-    <div class="stat-box">
-      <div class="stat-label">Power</div>
-      <div class="stat-value" id="powerDisplay">100%</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-label">Left Door</div>
-      <div class="stat-value" id="leftDoorPower">CLOSED</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-label">Right Door</div>
-      <div class="stat-value" id="rightDoorPower">CLOSED</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-label">Status</div>
-      <div class="stat-value" id="status">SAFE</div>
-    </div>
-  </div>
-</div>
+        function init() {
+            // Create the scene
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
 
-<div id="sidePanel">
-  <div class="panel-title">Animatronics</div>
-  <div class="animatronic-status" id="freddy">
-    <strong>Freddy Fazbear</strong><br>
-    Location: Stage
-  </div>
-  <div class="animatronic-status" id="bonnie">
-    <strong>Bonnie</strong><br>
-    Location: Stage
-  </div>
-  <div class="animatronic-status" id="chica">
-    <strong>Chica</strong><br>
-    Location: Stage
-  </div>
-  <div class="animatronic-status" id="foxy">
-    <strong>Foxy</strong><br>
-    Location: Pirate Cove
-  </div>
-  
-  <div class="panel-title" style="margin-top: 20px;">Cameras</div>
-  <div id="cameraButtons">
-    <button class="camera-btn" data-camera="0">CAM 1A - Stage</button>
-    <button class="camera-btn" data-camera="1">CAM 1B - Tables</button>
-    <button class="camera-btn" data-camera="2">CAM 2A - Pirate Cove</button>
-    <button class="camera-btn" data-camera="3">CAM 3 - Backstage</button>
-    <button class="camera-btn" data-camera="4">CAM 4 - East Hall</button>
-    <button class="camera-btn" data-camera="5">CAM 5 - West Hall</button>
-  </div>
-</div>
+            // Create a base plate
+            const plateGeometry = new THREE.BoxGeometry(10, 0.1, 10);
+            const plateMaterial = new THREE.MeshBasicMaterial({ color: 0x0077ff });
+            basePlate = new THREE.Mesh(plateGeometry, plateMaterial);
+            basePlate.position.y = -0.05; // Slightly above the ground
+            scene.add(basePlate);
 
-<script>
-// Game State
-const gameState = {
-  night: 1,
-  wave: 0, // 12 AM to 6 AM = waves 0-5
-  power: 100,
-  maxPower: 100,
-  leftDoorClosed: true,
-  rightDoorClosed: true,
-  leftDoorPowerUsage: 1,
-  rightDoorPowerUsage: 1,
-  gameOver: false,
-  survived: false,
-  currentCamera: 0,
-  animatronics: {
-    freddy: { location: 'Stage', threat: 0, moveSpeed: 0.8 },
-    bonnie: { location: 'Stage', threat: 0, moveSpeed: 0.9 },
-    chica: { location: 'Stage', threat: 0, moveSpeed: 0.85 },
-    foxy: { location: 'Pirate Cove', threat: 0, moveSpeed: 1.2 }
-  }
-};
+            // Create a gorilla (using a sphere placeholder)
+            const gorillaGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+            const gorillaMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+            gorilla = new THREE.Mesh(gorillaGeometry, gorillaMaterial);
+            scene.add(gorilla);
 
-// DOM Elements
-const powerDisplay = document.getElementById('powerDisplay');
-const leftDoorPower = document.getElementById('leftDoorPower');
-const rightDoorPower = document.getElementById('rightDoorPower');
-const statusDisplay = document.getElementById('status');
-const gameTime = document.getElementById('gameTime');
-const nightLabel = document.getElementById('nightLabel');
-const leftDoorBtn = document.getElementById('leftDoor');
-const rightDoorBtn = document.getElementById('rightDoor');
-const cameraBtns = document.querySelectorAll('.camera-btn');
+            // Position the camera
+            camera.position.z = 5;
 
-// Door Controls
-leftDoorBtn.addEventListener('click', () => toggleDoor('left'));
-rightDoorBtn.addEventListener('click', () => toggleDoor('right'));
+            // Handle window resizing
+            window.addEventListener('resize', onWindowResize, false);
 
-function toggleDoor(side) {
-  if (side === 'left') {
-    gameState.leftDoorClosed = !gameState.leftDoorClosed;
-    leftDoorBtn.classList.toggle('locked', gameState.leftDoorClosed);
-    leftDoorBtn.classList.toggle('open', !gameState.leftDoorClosed);
-  } else {
-    gameState.rightDoorClosed = !gameState.rightDoorClosed;
-    rightDoorBtn.classList.toggle('locked', gameState.rightDoorClosed);
-    rightDoorBtn.classList.toggle('open', !gameState.rightDoorClosed);
-  }
-}
+            // Start the animation
+            animate();
+        }
 
-// Camera Controls
-cameraBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    cameraBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    gameState.currentCamera = parseInt(btn.dataset.camera);
-  });
-});
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
 
-// Update HUD
-function updateHUD() {
-  powerDisplay.textContent = Math.max(0, Math.round(gameState.power)) + '%';
-  powerDisplay.classList.toggle('critical', gameState.power < 20);
-  
-  leftDoorPower.textContent = gameState.leftDoorClosed ? 'CLOSED' : 'OPEN';
-  leftDoorPower.style.color = gameState.leftDoorClosed ? '#00ff00' : '#ff0000';
-  
-  rightDoorPower.textContent = gameState.rightDoorClosed ? 'CLOSED' : 'OPEN';
-  rightDoorPower.style.color = gameState.rightDoorClosed ? '#00ff00' : '#ff0000';
-  
-  if (gameState.power <= 0) {
-    statusDisplay.textContent = 'BLACKOUT';
-    statusDisplay.style.color = '#ff0000';
-  } else if (gameState.power < 20) {
-    statusDisplay.textContent = 'CRITICAL';
-    statusDisplay.style.color = '#ff6600';
-  } else {
-    statusDisplay.textContent = 'SAFE';
-    statusDisplay.style.color = '#00ff00';
-  }
-}
+            // To mimic legless movement
+            if (movement) {
+                gorilla.position.x += movement.x;
+                gorilla.position.z += movement.z;
+            }
+        }
 
-// Update Animatronic Status
-function updateAnimatronicStatus() {
-  const animNames = ['freddy', 'bonnie', 'chica', 'foxy'];
-  animNames.forEach(name => {
-    const el = document.getElementById(name);
-    const anim = gameState.animatronics[name];
-    el.className = 'animatronic-status';
-    if (anim.threat > 75) el.classList.add('threat');
-    else if (anim.threat > 40) el.classList.add('warning');
-    else el.classList.add('active');
-    
-    el.innerHTML = `<strong>${name.charAt(0).toUpperCase() + name.slice(1)}</strong><br>
-                    Location: ${anim.location}<br>
-                    Threat Level: ${Math.round(anim.threat)}%`;
-  });
-}
+        let movement = new THREE.Vector3();
 
-// Game Time Update (12 AM to 6 AM, each "hour" is 30 seconds)
-let gameStartTime = Date.now();
-const GAME_HOUR_MS = 30000; // 30 seconds per in-game hour
+        function onKeyDown(event) {
+            switch(event.key) {
+                case 'w':
+                    movement.z = -0.1; // Move forward
+                    break;
+                case 's':
+                    movement.z = 0.1; // Move backward
+                    break;
+                case 'a':
+                    movement.x = -0.1; // Move left
+                    break;
+                case 'd':
+                    movement.x = 0.1; // Move right
+                    break;
+            }
+        }
 
-function updateTime() {
-  const elapsed = Date.now() - gameStartTime;
-  const hour = Math.floor((elapsed / GAME_HOUR_MS) % 6);
-  const minutes = Math.floor(((elapsed / GAME_HOUR_MS) % 1) * 60);
-  
-  const time = `${12 + hour}:${String(minutes).padStart(2, '0')} ${hour >= 6 ? 'AM' : 'AM'}`;
-  gameTime.textContent = time;
-  gameState.wave = hour;
-  
-  // Check if night is complete
-  if (hour >= 6) {
-    surviveNight();
-  }
-}
+        function onKeyUp(event) {
+            switch(event.key) {
+                case 'w':
+                case 's':
+                    movement.z = 0;
+                    break;
+                case 'a':
+                case 'd':
+                    movement.x = 0;
+                    break;
+            }
+        }
 
-// Power Usage (doors consume power)
-function updatePower(dt) {
-  let consumption = 0.5; // base consumption per second
-  
-  if (gameState.leftDoorClosed) consumption += gameState.leftDoorPowerUsage;
-  if (gameState.rightDoorClosed) consumption += gameState.rightDoorPowerUsage;
-  
-  gameState.power -= (consumption * dt) / 1000;
-  gameState.power = Math.max(0, gameState.power);
-}
-
-// Animatronics AI
-function updateAnimatronics(dt) {
-  const animNames = Object.keys(gameState.animatronics);
-  
-  animNames.forEach(name => {
-    const anim = gameState.animatronics[name];
-    
-    // Increase threat over time (more aggressive later in night)
-    anim.threat += (gameState.wave + 1) * 0.5 * dt / 1000;
-    anim.threat = Math.min(100, anim.threat);
-    
-    // Doors reduce threat
-    if ((name === 'freddy' || name === 'bonnie') && gameState.leftDoorClosed) {
-      anim.threat -= 2 * dt / 1000;
-    }
-    if ((name === 'chica' || name === 'foxy') && gameState.rightDoorClosed) {
-      anim.threat -= 2 * dt / 1000;
-    }
-    
-    anim.threat = Math.max(0, anim.threat);
-    
-    // Check if animatronic reaches office
-    if (anim.threat >= 100) {
-      gameOver('An animatronic reached the office!');
-    }
-  });
-}
-
-// Game Over
-function gameOver(reason) {
-  gameState.gameOver = true;
-  alert(`GAME OVER!\n${reason}\n\nYou survived until ${gameState.wave}:00`);
-  location.reload();
-}
-
-// Survive Night
-function surviveNight() {
-  gameState.survived = true;
-  alert(`NIGHT ${gameState.night} SURVIVED!\n\nYou made it through the night!`);
-  gameState.night++;
-  gameState.wave = 0;
-  gameStartTime = Date.now();
-  gameState.power = 100;
-  gameState.animatronics.freddy.threat = 0;
-  gameState.animatronics.bonnie.threat = 0;
-  gameState.animatronics.chica.threat = 0;
-  gameState.animatronics.foxy.threat = 0;
-  nightLabel.textContent = `Night ${gameState.night}`;
-}
-
-// Game Loop
-let lastTime = Date.now();
-function gameLoop() {
-  const now = Date.now();
-  const dt = now - lastTime;
-  lastTime = now;
-  
-  if (!gameState.gameOver) {
-    updateTime();
-    updatePower(dt);
-    updateAnimatronics(dt);
-    updateHUD();
-    updateAnimatronicStatus();
-  }
-  
-  requestAnimationFrame(gameLoop);
-}
-
-// Initialize
-updateHUD();
-updateAnimatronicStatus();
-cameraBtns[0].classList.add('active');
-requestAnimationFrame(gameLoop);
-
-// Keyboard Controls
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowLeft') toggleDoor('left');
-  if (e.key === 'ArrowRight') toggleDoor('right');
-});
-</script>
-
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+        init();
+    </script>
 </body>
 </html>
