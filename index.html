@@ -11,33 +11,67 @@
 </head>
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
     <script>
-        let scene, camera, renderer, gorilla, basePlate;
+        let scene, camera, renderer, gorilla, basePlate, controls;
 
         function init() {
             // Create the scene
             scene = new THREE.Scene();
+
+            // Create the camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 2, 5);
+
+            // Create the renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
+            // Add a light source
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(5, 10, 7.5);
+            scene.add(light);
+            scene.add(new THREE.AmbientLight(0x404040));
+
             // Create a base plate
             const plateGeometry = new THREE.BoxGeometry(10, 0.1, 10);
-            const plateMaterial = new THREE.MeshBasicMaterial({ color: 0x0077ff });
+            const plateMaterial = new THREE.MeshStandardMaterial({ color: 0x0077ff });
             basePlate = new THREE.Mesh(plateGeometry, plateMaterial);
-            basePlate.position.y = -0.05; // Slightly above the ground
+            basePlate.position.y = -0.05;
             scene.add(basePlate);
 
-            // Create a gorilla (using a sphere placeholder)
-            const gorillaGeometry = new THREE.SphereGeometry(0.5, 32, 32);
-            const gorillaMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
-            gorilla = new THREE.Mesh(gorillaGeometry, gorillaMaterial);
-            gorilla.position.y = 0.5; // Elevated above the base plate
+            // Create the gorilla shape
+            gorilla = new THREE.Group();
+
+            // Gorilla body
+            const bodyGeometry = new THREE.SphereGeometry(0.7, 32, 32);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            gorilla.add(body);
+
+            // Gorilla arms
+            const armGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
+            const armMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 });
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(-0.9, 0, 0);
+            leftArm.rotation.z = Math.PI / 4;
+            gorilla.add(leftArm);
+
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.9, 0, 0);
+            rightArm.rotation.z = -Math.PI / 4;
+            gorilla.add(rightArm);
+
+            // Set gorilla position
+            gorilla.position.y = 0.5; // Above the base plate
             scene.add(gorilla);
 
-            // Position the camera
-            camera.position.z = 5;
+            // Initialize Orbit Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+            controls.dampingFactor = 0.25;
+            controls.screenSpacePanning = false;
 
             // Handle window resizing
             window.addEventListener('resize', onWindowResize, false);
@@ -48,13 +82,8 @@
 
         function animate() {
             requestAnimationFrame(animate);
+            controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
             renderer.render(scene, camera);
-
-            // To mimic legless movement
-            if (movement) {
-                gorilla.position.x += movement.x;
-                gorilla.position.z += movement.z;
-            }
         }
 
         let movement = new THREE.Vector3();
@@ -74,6 +103,8 @@
                     movement.x = 0.1; // Move right
                     break;
             }
+            gorilla.position.x += movement.x;
+            gorilla.position.z += movement.z;
         }
 
         function onKeyUp(event) {
