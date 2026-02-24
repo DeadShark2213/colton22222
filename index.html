@@ -14,6 +14,10 @@
     <script>
         let scene, camera, renderer, gorilla, basePlate;
         let mouseX = 0, mouseY = 0;
+        let isJumping = false;
+        let jumpVelocity = 0.2; // Vertical jumping speed
+        let gravity = -0.01; // Gravity effect
+        let groundY = 0.5; // Height of the ground (gorilla's y position)
 
         function init() {
             // Create the scene
@@ -66,11 +70,11 @@
             gorilla.add(rightArm);
 
             // Set gorilla position
-            gorilla.position.y = 0.5; // Above the base plate
+            gorilla.position.y = groundY; // Above the base plate
             scene.add(gorilla);
 
-            // Add trees around the base plate
-            addTrees();
+            // Add large trees around the base plate
+            addLargeTrees();
 
             // Start the animation loop
             animate();
@@ -79,10 +83,10 @@
             window.addEventListener('mousemove', onMouseMove);
         }
 
-        function addTrees() {
-            const treeTrunkGeometry = new THREE.CylinderGeometry(0.1, 0.15, 2, 8);
+        function addLargeTrees() {
+            const treeTrunkGeometry = new THREE.CylinderGeometry(0.5, 0.75, 10, 8); // Larger tree trunk
             const treeTrunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-            const treeLeavesGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const treeLeavesGeometry = new THREE.SphereGeometry(1.5, 16, 16); // Larger tree leaves
             const treeLeavesMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
 
             // Example positions for trees
@@ -100,12 +104,12 @@
             treePositions.forEach(pos => {
                 // Create trunk
                 const trunk = new THREE.Mesh(treeTrunkGeometry, treeTrunkMaterial);
-                trunk.position.set(pos.x, 1, pos.z);
+                trunk.position.set(pos.x, 5, pos.z); // Position the trunk higher
                 scene.add(trunk);
 
                 // Create leaves
                 const leaves = new THREE.Mesh(treeLeavesGeometry, treeLeavesMaterial);
-                leaves.position.set(pos.x, 2.5, pos.z);
+                leaves.position.set(pos.x, 10, pos.z); // Position leaves above trunk
                 scene.add(leaves);
             });
         }
@@ -122,6 +126,19 @@
             camera.position.z = gorilla.position.z + 5 * Math.cos(gorilla.rotation.y);
             camera.position.y = 2; // Keep camera height consistent
             camera.lookAt(gorilla.position); // Always look at the gorilla
+
+            // Apply gravity
+            if (isJumping) {
+                gorilla.position.y += jumpVelocity;
+                jumpVelocity += gravity;
+            
+                // Check if gorilla hits the ground
+                if (gorilla.position.y <= groundY) {
+                    gorilla.position.y = groundY; // Reset position
+                    isJumping = false; // Reset jumping flag
+                    jumpVelocity = 0.2; // Reset jump velocity
+                }
+            }
 
             renderer.render(scene, camera);
         }
@@ -142,6 +159,11 @@
                     break;
                 case 'd': // Move right
                     movement.x = 1; // Set speed
+                    break;
+                case ' ': // Jump
+                    if (!isJumping) { // Only jump if not already jumping
+                        isJumping = true;
+                    }
                     break;
             }
         }
