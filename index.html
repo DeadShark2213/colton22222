@@ -12,7 +12,7 @@
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        let scene, camera, renderer, gorilla, basePlate;
+        let scene, camera, renderer, gorilla, basePlate, stick;
         let isJumping = false;
         let jumpVelocity = 0.2; // Vertical jumping speed
         let gravity = -0.01; // Gravity effect
@@ -20,7 +20,8 @@
         const trees = []; // Array to hold tree objects for collision detection
         const rotationSpeed = 0.07; // Increased speed for smoother rotation
         let targetRotationY = 0; // Target rotation for smooth turning
-        
+        let stickPickedUp = false; // Track whether the stick is picked up
+
         function init() {
             // Create the scene
             scene = new THREE.Scene();
@@ -119,7 +120,7 @@
         function addStick() {
             const stickGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 16); // Cylinder for the stick
             const stickMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); // Brown color for the stick
-            const stick = new THREE.Mesh(stickGeometry, stickMaterial);
+            stick = new THREE.Mesh(stickGeometry, stickMaterial);
 
             // Position the stick at the ground level
             stick.position.set(0, 1, 0); // Adjust Y position to be raised above the ground
@@ -188,6 +189,14 @@
                         jumpVelocity = 0.4; // Increase jump height
                     }
                     break;
+                case 'e': // Pick up the stick
+                    if (!stickPickedUp && isCloseToStick()) { // Only pick it up if not already picked and close
+                        stickPickedUp = true;
+                        scene.remove(stick); // Remove stick from the scene
+                        // Optional: You can further indicate stick is picked up or modify the gorilla 
+                        console.log("Stick picked up!");
+                    }
+                    break;
             }
         }
 
@@ -198,6 +207,11 @@
                     movement.z = 0; // Stop moving forward/backward
                     break;
             }
+        }
+
+        function isCloseToStick() {
+            const distance = gorilla.position.distanceTo(stick.position);
+            return distance < 1; // Adjust this value for how close you want to be to pick it up
         }
 
         function updateGorillaPosition() {
@@ -262,3 +276,4 @@
     </script>
 </body>
 </html>
+
