@@ -70,8 +70,9 @@
             rightArm.rotation.z = -Math.PI / 4;
             gorilla.add(rightArm);
 
-            // Set gorilla position on the ground
+            // Position gorilla on its arms
             gorilla.position.set(0, groundY + 1.5, 0); // Positioned above the ground
+            gorilla.rotation.x = -Math.PI / 2; // Rotate to stand on arms
             scene.add(gorilla);
 
             // Add large trees around the base plate
@@ -80,8 +81,7 @@
             // Start the animation loop
             animate();
 
-            // Mouse move listener
-            window.addEventListener('mousemove', onMouseMove);
+            // Mouse move listener removed
         }
 
         function addLargeTrees() {
@@ -119,9 +119,7 @@
         function animate() {
             requestAnimationFrame(animate);
             updateGorillaPosition(); // Update gorilla position based on movement
-
-            // Update gorilla rotation to face mouse direction
-            gorilla.rotation.y = Math.atan2(mouseX, mouseY);
+            applyWalkingAnimation(); // Apply walking animation
 
             // Update camera to follow gorilla's position
             camera.position.x = gorilla.position.x + 5 * Math.sin(gorilla.rotation.y);
@@ -153,22 +151,22 @@
             renderer.render(scene, camera);
         }
 
-        // Movement logic
         let movement = new THREE.Vector3();
+        let angle = 0; // For the walking animation
 
         function onKeyDown(event) {
             switch(event.key) {
-                case 'w': // Move forward
+                case 'ArrowUp': // Move forward
                     movement.z = -1; // Set speed
                     break;
-                case 's': // Move backward
+                case 'ArrowDown': // Move backward
                     movement.z = 1; // Set speed
                     break;
-                case 'a': // Move left
-                    movement.x = -1; // Set speed
+                case 'ArrowLeft': // Rotate left
+                    gorilla.rotation.y += 0.05; // Rotate
                     break;
-                case 'd': // Move right
-                    movement.x = 1; // Set speed
+                case 'ArrowRight': // Rotate right
+                    gorilla.rotation.y -= 0.05; // Rotate
                     break;
                 case ' ': // Jump
                     if (!isJumping) { // Only jump if not already jumping
@@ -181,13 +179,9 @@
 
         function onKeyUp(event) {
             switch(event.key) {
-                case 'w':
-                case 's':
+                case 'ArrowUp':
+                case 'ArrowDown':
                     movement.z = 0; // Stop moving forward/backward
-                    break;
-                case 'a':
-                case 'd':
-                    movement.x = 0; // Stop moving left/right
                     break;
             }
         }
@@ -197,8 +191,8 @@
 
             // Adjust movement based on gorilla's current rotation
             const newPosition = new THREE.Vector3().copy(gorilla.position);
-            newPosition.x += (movement.z * Math.sin(gorilla.rotation.y) + movement.x * Math.cos(gorilla.rotation.y)) * speed;
-            newPosition.z += (movement.z * Math.cos(gorilla.rotation.y) - movement.x * Math.sin(gorilla.rotation.y)) * speed;
+            newPosition.x += (movement.z * Math.sin(gorilla.rotation.y)) * speed;
+            newPosition.z += (movement.z * Math.cos(gorilla.rotation.y)) * speed;
 
             // Check future position against trees
             const futureGorilla = gorilla.clone();
@@ -217,17 +211,20 @@
             }
         }
 
+        function applyWalkingAnimation() {
+            angle += 0.1; // Increment angle for animation
+            const armMovement = Math.sin(angle); // Create a back and forth motion
+
+            // Update arm positions to simulate walking
+            gorilla.children[1].position.y = armMovement * 0.2; // Left arm
+            gorilla.children[2].position.y = -armMovement * 0.2; // Right arm
+        }
+
         // Collision detection function
         function checkCollision(gorilla, tree) {
             const gorillaBox = new THREE.Box3().setFromObject(gorilla);
             const treeBox = new THREE.Box3().setFromObject(tree);
             return gorillaBox.intersectsBox(treeBox);
-        }
-
-        // Handle mouse move
-        function onMouseMove(event) {
-            mouseX = (event.clientX / window.innerWidth) * 2 - 1; // Normalize to -1 to 1
-            mouseY = (event.clientY / window.innerHeight) * 2 - 1; // Normalize to -1 to 1
         }
 
         // Handle window resizing
