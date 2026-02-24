@@ -18,6 +18,7 @@
         let jumpVelocity = 0.2; // Vertical jumping speed
         let gravity = -0.01; // Gravity effect
         let groundY = 0.5; // Height of the ground (gorilla's y position)
+        const trees = []; // Array to hold tree objects for collision detection
 
         function init() {
             // Create the scene
@@ -106,6 +107,7 @@
                 const trunk = new THREE.Mesh(treeTrunkGeometry, treeTrunkMaterial);
                 trunk.position.set(pos.x, 5, pos.z); // Position the trunk higher
                 scene.add(trunk);
+                trees.push(trunk); // Add to trees array for collision detection
 
                 // Create leaves
                 const leaves = new THREE.Mesh(treeLeavesGeometry, treeLeavesMaterial);
@@ -131,7 +133,7 @@
             if (isJumping) {
                 gorilla.position.y += jumpVelocity;
                 jumpVelocity += gravity;
-            
+
                 // Check if gorilla hits the ground
                 if (gorilla.position.y <= groundY) {
                     gorilla.position.y = groundY; // Reset position
@@ -139,6 +141,14 @@
                     jumpVelocity = 0.2; // Reset jump velocity
                 }
             }
+
+            // Check for collisions with trees
+            trees.forEach(tree => {
+                if (checkCollision(gorilla, tree)) {
+                    // If a collision is detected, reset the gorilla's position
+                    gorilla.position.y = groundY; // Optionally place gorilla at ground level on collision
+                }
+            });
 
             renderer.render(scene, camera);
         }
@@ -187,6 +197,13 @@
             // Adjust movement based on gorilla's current rotation
             gorilla.position.x += (movement.z * Math.sin(gorilla.rotation.y) + movement.x * Math.cos(gorilla.rotation.y)) * speed;
             gorilla.position.z += (movement.z * Math.cos(gorilla.rotation.y) - movement.x * Math.sin(gorilla.rotation.y)) * speed;
+        }
+
+        // Collision detection function
+        function checkCollision(gorilla, tree) {
+            const gorillaBox = new THREE.Box3().setFromObject(gorilla);
+            const treeBox = new THREE.Box3().setFromObject(tree);
+            return gorillaBox.intersectsBox(treeBox);
         }
 
         // Handle mouse move
