@@ -56,19 +56,19 @@
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
             gorilla.add(body);
 
-            // Gorilla arms positioned as legs
+            // Gorilla legs positioned above ground
             const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
             const legMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 });
             const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-            leftLeg.position.set(-0.7, -1.5, 0); // Positioned as a leg
+            leftLeg.position.set(-0.7, -0.7, 0); // Positioned as a leg above the ground
             gorilla.add(leftLeg);
 
             const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-            rightLeg.position.set(0.7, -1.5, 0); // Positioned as a leg
+            rightLeg.position.set(0.7, -0.7, 0); // Positioned as a leg above the ground
             gorilla.add(rightLeg);
 
-            // Position gorilla and adjust rotation
-            gorilla.position.set(0, groundY + 1.5, 0);
+            // Position gorilla
+            gorilla.position.set(0, groundY + 1, 0); // Adjusted height
             scene.add(gorilla);
 
             // Add large trees around the base plate
@@ -157,11 +157,11 @@
                 case 's': // Move backward
                     movement.z = 1; // Set speed
                     break;
-                case 'a': // Rotate left
-                    gorilla.rotation.y += 0.05; // Rotate
+                case 'ArrowLeft': // Rotate left
+                    gorilla.rotation.y -= 0.02; // Smooth rotation
                     break;
-                case 'd': // Rotate right
-                    gorilla.rotation.y -= 0.05; // Rotate
+                case 'ArrowRight': // Rotate right
+                    gorilla.rotation.y += 0.02; // Smooth rotation
                     break;
                 case ' ': // Jump
                     if (!isJumping) { // Only jump if not already jumping
@@ -211,8 +211,8 @@
             const legMovement = Math.sin(angle); // Create a back and forth motion
 
             // Update leg positions to simulate walking
-            gorilla.children[1].position.y = -1.5 + legMovement * 0.1; // Left leg
-            gorilla.children[2].position.y = -1.5 - legMovement * 0.1; // Right leg
+            gorilla.children[1].position.y = -0.7 + legMovement * 0.1; // Left leg
+            gorilla.children[2].position.y = -0.7 - legMovement * 0.1; // Right leg
         }
 
         // Collision detection function
