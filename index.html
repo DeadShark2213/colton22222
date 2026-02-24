@@ -13,6 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let scene, camera, renderer, gorilla, basePlate;
+        let mouseX = 0, mouseY = 0;
 
         function init() {
             // Create the scene
@@ -26,6 +27,7 @@
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setClearColor(0x87CEEB); // Set the background color to sky blue
+            renderer.shadowMap.enabled = false; // Disable shadows
             document.body.appendChild(renderer.domElement);
 
             // Add a light source
@@ -34,9 +36,9 @@
             scene.add(light);
             scene.add(new THREE.AmbientLight(0x404040));
 
-            // Create a base plate
-            const plateGeometry = new THREE.BoxGeometry(10, 0.1, 10);
-            const plateMaterial = new THREE.MeshStandardMaterial({ color: 0x0077ff });
+            // Create a square base plate (grass)
+            const plateGeometry = new THREE.BoxGeometry(50, 0.1, 50);
+            const plateMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
             basePlate = new THREE.Mesh(plateGeometry, plateMaterial);
             basePlate.position.y = -0.05;
             scene.add(basePlate);
@@ -67,13 +69,108 @@
             gorilla.position.y = 0.5; // Above the base plate
             scene.add(gorilla);
 
+            // Add trees around the base plate
+            addTrees();
+
             // Start the animation loop
             animate();
+
+            // Mouse move listener
+            window.addEventListener('mousemove', onMouseMove);
+        }
+
+        function addTrees() {
+            const treeTrunkGeometry = new THREE.CylinderGeometry(0.1, 0.15, 2, 8);
+            const treeTrunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+            const treeLeavesGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const treeLeavesMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+
+            // Example positions for trees
+            const treePositions = [
+                { x: -20, z: 0 },
+                { x: -15, z: -5 },
+                { x: -10, z: 5 },
+                { x: -5, z: 0 },
+                { x: 0, z: -15 },
+                { x: 5, z: -5 },
+                { x: 15, z: 5 },
+                { x: 20, z: 0 },
+            ];
+
+            treePositions.forEach(pos => {
+                // Create trunk
+                const trunk = new THREE.Mesh(treeTrunkGeometry, treeTrunkMaterial);
+                trunk.position.set(pos.x, 1, pos.z);
+                scene.add(trunk);
+
+                // Create leaves
+                const leaves = new THREE.Mesh(treeLeavesGeometry, treeLeavesMaterial);
+                leaves.position.set(pos.x, 2.5, pos.z);
+                scene.add(leaves);
+            });
         }
 
         function animate() {
             requestAnimationFrame(animate);
+            updateGorillaPosition(); // Update gorilla position based on movement
+
+            // Update gorilla rotation to face mouse direction
+            gorilla.rotation.y = Math.atan2(mouseX, mouseY);
+
+            // Update camera to follow gorilla's position
+            camera.position.x = gorilla.position.x + 5 * Math.sin(gorilla.rotation.y);
+            camera.position.z = gorilla.position.z + 5 * Math.cos(gorilla.rotation.y);
+            camera.position.y = 2; // Keep camera height consistent
+            camera.lookAt(gorilla.position); // Always look at the gorilla
+
             renderer.render(scene, camera);
+        }
+
+        // Movement logic
+        let movement = new THREE.Vector3();
+
+        function onKeyDown(event) {
+            switch(event.key) {
+                case 'w': // Move forward
+                    movement.z = -1; // Set speed
+                    break;
+                case 's': // Move backward
+                    movement.z = 1; // Set speed
+                    break;
+                case 'a': // Move left
+                    movement.x = -1; // Set speed
+                    break;
+                case 'd': // Move right
+                    movement.x = 1; // Set speed
+                    break;
+            }
+        }
+
+        function onKeyUp(event) {
+            switch(event.key) {
+                case 'w':
+                case 's':
+                    movement.z = 0; // Stop moving forward/backward
+                    break;
+                case 'a':
+                case 'd':
+                    movement.x = 0; // Stop moving left/right
+                    break;
+            }
+        }
+
+        function updateGorillaPosition() {
+            const speed = 0.1; // Movement speed
+
+            // Adjust movement based on gorilla's current rotation
+            gorilla.position.x += (movement.z * Math.sin(gorilla.rotation.y) + movement.x * Math.cos(gorilla.rotation.y)) * speed;
+            gorilla.position.z += (movement.z * Math.cos(gorilla.rotation.y) - movement.x * Math.sin(gorilla.rotation.y)) * speed;
+        }
+
+        // Handle mouse move
+        function onMouseMove(event) {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1; // Normalize to -1 to 1
+            mouseY = (event.clientY / window.innerHeight) * 2 - 1; // Normalize to -1 to 1
         }
 
         // Handle window resizing
@@ -82,6 +179,10 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        // Event listeners for keyboard input
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
 
         init();
     </script>
