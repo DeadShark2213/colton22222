@@ -142,6 +142,12 @@
             camera.position.y = 5; // Keep camera height consistent
             camera.lookAt(gorilla.position); // Always look at the gorilla
 
+            // Position stick on gorilla's head if picked up
+            if (stickPickedUp) {
+                stick.position.set(0, 1.5, 0); // Raise stick above gorilla's head
+                stick.rotation.y = gorilla.rotation.y; // Match rotation with the gorilla
+            }
+
             // Apply gravity
             if (isJumping) {
                 gorilla.position.y += jumpVelocity;
@@ -193,8 +199,15 @@
                     if (!stickPickedUp && isCloseToStick()) { // Only pick it up if not already picked and close
                         stickPickedUp = true;
                         scene.remove(stick); // Remove stick from the scene
-                        // Optional: You can further indicate stick is picked up or modify the gorilla 
                         console.log("Stick picked up!");
+                    }
+                    break;
+                case 'Control': // Drop the stick
+                    if (stickPickedUp) {
+                        stickPickedUp = false;
+                        stick.position.set(0, 1, 0); // Reset position to ground
+                        scene.add(stick); // Add the stick back to the scene
+                        console.log("Stick dropped!");
                     }
                     break;
             }
@@ -276,4 +289,3 @@
     </script>
 </body>
 </html>
-
