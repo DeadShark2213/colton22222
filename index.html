@@ -18,7 +18,7 @@
         let gravity = -0.01; // Gravity effect
         let groundY = 0.5; // Height of the ground (gorilla's y position)
         const trees = []; // Array to hold tree objects for collision detection
-        const rotationSpeed = 0.02; // Speed for smooth rotation
+        const rotationSpeed = 0.05; // Increased speed for smoother rotation
         let targetRotationY = 0; // Target rotation for smooth turning
 
         function init() {
@@ -118,7 +118,7 @@
             applyWalkingAnimation(); // Apply walking animation
 
             // Smoothly rotate gorilla towards target rotation
-            gorilla.rotation.y += (targetRotationY - gorilla.rotation.y) * 0.1; // Smooth transition
+            gorilla.rotation.y += (targetRotationY - gorilla.rotation.y) * 0.15; // Increased smooth transition speed
 
             // Update camera
             const angleOffset = gorilla.rotation.y; // Adjust camera based on gorilla's orientation
