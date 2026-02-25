@@ -135,12 +135,19 @@
 
             if (stickPickedUp) {
                 // Position stick in hand like a sword
-                stick.position.set(gorilla.position.x + 0.5 * Math.sin(yaw), gorilla.position.y, gorilla.position.z + 0.5 * Math.cos(yaw));
-                stick.rotation.set(-Math.PI / 4, 0, yaw); // Angle the stick like a sword
-                gorilla.children[2].position.y = -0.3; 
+                stick.position.set(
+                    gorilla.position.x + 0.5 * Math.sin(yaw), 
+                    gorilla.position.y + 0.5, 
+                    gorilla.position.z + 0.5 * Math.cos(yaw)
+                );
+                stick.rotation.set(-Math.PI / 4, 0, yaw);
             } else {
-                stick.position.set(gorilla.position.x, 1, gorilla.position.z);
-                gorilla.children[2].position.y = -0.5; 
+                // When dropping the stick, position in front of the gorilla
+                stick.position.set(
+                    gorilla.position.x + 0.5 * Math.sin(yaw), 
+                    gorilla.position.y, 
+                    gorilla.position.z + 0.5 * Math.cos(yaw)
+                );
             }
 
             if (isJumping) {
@@ -182,14 +189,19 @@
                 case 'e': 
                     if (!stickPickedUp && isCloseToStick()) { 
                         stickPickedUp = true; 
-                        scene.remove(stick); 
+                        stick.position.y += 1; // Raise stick higher when picked up
                         console.log("Stick picked up!");
                     }
                     break;
                 case 'Control': 
                     if (stickPickedUp) {
                         stickPickedUp = false; 
-                        stick.position.set(gorilla.position.x, 1, gorilla.position.z);
+                        // Stop updating the stick's position; this is where it's dropped
+                        stick.position.set(
+                            gorilla.position.x + 0.5 * Math.sin(yaw), 
+                            gorilla.position.y, 
+                            gorilla.position.z + 0.5 * Math.cos(yaw)
+                        );
                         scene.add(stick); 
                         console.log("Stick dropped!");
                     }
