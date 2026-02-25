@@ -18,7 +18,6 @@
         let gravity = -0.01; // Gravity effect
         let groundY = 0.5; // Height of the ground (gorilla's y position)
         const trees = []; // Array to hold tree objects for collision detection
-        const rotationSpeed = 0.07; // Speed for smooth turning
         let stickPickedUp = false; // Track whether the stick is picked up
 
         // Variables for mouse control
@@ -137,6 +136,10 @@
 
             // Update the gorilla's rotation based on mouse movement
             gorilla.rotation.y += (mouseX * sensitivity);
+            camera.rotation.x = -mouseY * sensitivity; // Update camera pitch
+
+            // Constrain camera pitch to prevent flipping
+            camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
 
             // Update camera to follow the gorilla
             const angleOffset = gorilla.rotation.y; // Adjust camera based on gorilla's orientation
@@ -283,9 +286,6 @@
         window.addEventListener('mousemove', function(event) {
             mouseX = (event.clientX / window.innerWidth) * 2 - 1; // Normalized to [-1, 1]
             mouseY = (event.clientY / window.innerHeight) * 2 - 1; // Normalized to [-1, 1]
-
-            // Update the gorilla's rotation based on mouse Y position
-            gorilla.rotation.x = mouseY * sensitivity;
         });
 
         // Event listeners for keyboard input
