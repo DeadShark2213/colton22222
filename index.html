@@ -76,7 +76,7 @@
 
             addLargeTrees();
             addStick();
-            addMineShaft(); // Add the mine shaft
+            addMineShaft(); // Call to add the mine shaft
 
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('keydown', onKeyDown);
@@ -134,14 +134,11 @@
             // Create support beams
             const beamGeometry = new THREE.BoxGeometry(0.2, 6, 0.2);
             const beamMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-            const beams = [];
-
             for (let i = -1; i <= 1; i += 2) {
                 for (let j = -1; j <= 1; j += 2) {
                     const beam = new THREE.Mesh(beamGeometry, beamMaterial);
                     beam.position.set(i * 1.5, 3, j * 1.5);
                     scene.add(beam);
-                    beams.push(beam);
                 }
             }
 
@@ -150,7 +147,7 @@
             const trackMaterial = new THREE.MeshStandardMaterial({ color: 0xA9A9A9 });
             const track = new THREE.Mesh(trackGeometry, trackMaterial);
             track.rotation.y = Math.PI / 4; // Angle the track
-            track.position.set(0, -5, -10);
+            track.position.set(0, 0, -10);
             scene.add(track);
         }
 
