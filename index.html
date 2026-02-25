@@ -49,7 +49,7 @@
             scene.add(light);
             scene.add(new THREE.AmbientLight(0x404040));
 
-            const plateGeometry = new THREE.BoxGeometry(200, 0.1, 200); 
+            const plateGeometry = new THREE.BoxGeometry(200, 0.1, 200);
             const plateMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
             basePlate = new THREE.Mesh(plateGeometry, plateMaterial);
             basePlate.position.y = -0.05;
@@ -88,7 +88,7 @@
         function addLargeTrees() {
             const treeTrunkGeometry = new THREE.CylinderGeometry(0.5, 0.75, 10, 8); 
             const treeTrunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-            const treeLeavesGeometry = new THREE.SphereGeometry(1.5, 16, 16); 
+            const treeLeavesGeometry = new THREE.SphereGeometry(1.5, 16, 16);
             const treeLeavesMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
 
             const treePositions = [
@@ -118,7 +118,7 @@
             const stickGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 16); 
             const stickMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); 
             stick = new THREE.Mesh(stickGeometry, stickMaterial);
-            stick.position.set(0, 1, 0); 
+            stick.position.set(0, 1, 0);
             scene.add(stick);
         }
 
@@ -134,10 +134,11 @@
             camera.lookAt(gorilla.position); 
 
             if (stickPickedUp) {
-                stick.position.set(0, 1.5, 0); 
-                gorilla.children[2].position.y = -0.3; // Raise the right leg
+                stick.position.set(gorilla.position.x + 0.5 * Math.sin(yaw), gorilla.position.y + 0.5, gorilla.position.z + 0.5 * Math.cos(yaw);
+                gorilla.children[2].position.y = -0.3; 
             } else {
-                gorilla.children[2].position.y = -0.5; // Reset to normal
+                stick.position.set(gorilla.position.x,	1, gorilla.position.z);
+                gorilla.children[2].position.y = -0.5; 
             }
 
             if (isJumping) {
