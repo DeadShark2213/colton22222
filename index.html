@@ -34,7 +34,6 @@
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setClearColor(0x87CEEB); // Set the background color to sky blue
-            renderer.shadowMap.enabled = false; // Disable shadows
             document.body.appendChild(renderer.domElement);
 
             // Add light sources
@@ -205,7 +204,8 @@
                 case 'Control': // Drop the stick
                     if (stickPickedUp) {
                         stickPickedUp = false;
-                        stick.position.set(0, 1, 0); // Reset position to ground
+                        // Set the stick's position to the gorilla's position before dropping it
+                        stick.position.set(gorilla.position.x, 1, gorilla.position.z);
                         scene.add(stick); // Add the stick back to the scene
                         console.log("Stick dropped!");
                     }
