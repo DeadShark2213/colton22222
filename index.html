@@ -49,7 +49,7 @@
             scene.add(light);
             scene.add(new THREE.AmbientLight(0x404040));
 
-            const plateGeometry = new THREE.BoxGeometry(200, 0.1, 200);
+            const plateGeometry = new THREE.BoxGeometry(200, 0.1, 200); 
             const plateMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
             basePlate = new THREE.Mesh(plateGeometry, plateMaterial);
             basePlate.position.y = -0.05;
@@ -88,7 +88,7 @@
         function addLargeTrees() {
             const treeTrunkGeometry = new THREE.CylinderGeometry(0.5, 0.75, 10, 8); 
             const treeTrunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-            const treeLeavesGeometry = new THREE.SphereGeometry(1.5, 16, 16);
+            const treeLeavesGeometry = new THREE.SphereGeometry(1.5, 16, 16); 
             const treeLeavesMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
 
             const treePositions = [
@@ -134,20 +134,10 @@
             camera.lookAt(gorilla.position); 
 
             if (stickPickedUp) {
-                // Position stick in hand like a sword
-                stick.position.set(
-                    gorilla.position.x + 0.5 * Math.sin(yaw), 
-                    gorilla.position.y + 0.5, 
-                    gorilla.position.z + 0.5 * Math.cos(yaw)
-                );
-                stick.rotation.set(-Math.PI / 4, 0, yaw);
+                stick.position.set(0, 1.5, 0); 
+                gorilla.children[2].position.y = -0.3; // Raise the right leg
             } else {
-                // When dropping the stick, position in front of the gorilla
-                stick.position.set(
-                    gorilla.position.x + 0.5 * Math.sin(yaw), 
-                    gorilla.position.y, 
-                    gorilla.position.z + 0.5 * Math.cos(yaw)
-                );
+                gorilla.children[2].position.y = -0.5; // Reset to normal
             }
 
             if (isJumping) {
@@ -189,19 +179,14 @@
                 case 'e': 
                     if (!stickPickedUp && isCloseToStick()) { 
                         stickPickedUp = true; 
-                        stick.position.y += 1; // Raise stick higher when picked up
+                        scene.remove(stick); 
                         console.log("Stick picked up!");
                     }
                     break;
                 case 'Control': 
                     if (stickPickedUp) {
                         stickPickedUp = false; 
-                        // Stop updating the stick's position; this is where it's dropped
-                        stick.position.set(
-                            gorilla.position.x + 0.5 * Math.sin(yaw), 
-                            gorilla.position.y, 
-                            gorilla.position.z + 0.5 * Math.cos(yaw)
-                        );
+                        stick.position.set(gorilla.position.x, 1, gorilla.position.z);
                         scene.add(stick); 
                         console.log("Stick dropped!");
                     }
