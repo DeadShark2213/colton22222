@@ -118,7 +118,7 @@
             const stickGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 16); 
             const stickMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); 
             stick = new THREE.Mesh(stickGeometry, stickMaterial);
-            stick.position.set(0, 1, 0);
+            stick.position.set(0, 1, 0); 
             scene.add(stick);
         }
 
@@ -134,10 +134,12 @@
             camera.lookAt(gorilla.position); 
 
             if (stickPickedUp) {
-                stick.position.set(gorilla.position.x + 0.5 * Math.sin(yaw), gorilla.position.y + 0.5, gorilla.position.z + 0.5 * Math.cos(yaw);
+                // Position stick in hand like a sword
+                stick.position.set(gorilla.position.x + 0.5 * Math.sin(yaw), gorilla.position.y, gorilla.position.z + 0.5 * Math.cos(yaw));
+                stick.rotation.set(-Math.PI / 4, 0, yaw); // Angle the stick like a sword
                 gorilla.children[2].position.y = -0.3; 
             } else {
-                stick.position.set(gorilla.position.x,	1, gorilla.position.z);
+                stick.position.set(gorilla.position.x, 1, gorilla.position.z);
                 gorilla.children[2].position.y = -0.5; 
             }
 
