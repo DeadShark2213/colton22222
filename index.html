@@ -23,7 +23,9 @@
         // Variables for mouse control
         let mouseX = 0;
         let mouseY = 0;
-        const sensitivity = 0.01; // Sensitivity for mouse movement
+        const sensitivity = 0.005; // Sensitivity for mouse movement
+        let yaw = 0; // Horizontal rotation
+        let pitch = 0; // Vertical rotation
 
         function init() {
             // Create the scene
@@ -134,18 +136,13 @@
             updateGorillaPosition(); // Update gorilla position based on movement
             applyWalkingAnimation(); // Apply walking animation
 
-            // Update the gorilla's rotation based on mouse movement
-            gorilla.rotation.y += (mouseX * sensitivity);
-            camera.rotation.x = -mouseY * sensitivity; // Update camera pitch
+            // Update the gorilla's rotation based on yaw
+            gorilla.rotation.y = yaw;
 
-            // Constrain camera pitch to prevent flipping
-            camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
-
-            // Update camera to follow the gorilla
-            const angleOffset = gorilla.rotation.y; // Adjust camera based on gorilla's orientation
-            camera.position.x = gorilla.position.x + 5 * Math.sin(angleOffset);
-            camera.position.z = gorilla.position.z + 5 * Math.cos(angleOffset);
-            camera.position.y = 5; // Keep camera height consistent
+            // Update camera position
+            camera.position.x = gorilla.position.x + 5 * Math.sin(yaw);
+            camera.position.z = gorilla.position.z + 5 * Math.cos(yaw);
+            camera.position.y = gorilla.position.y + pitch; // Adjust height by pitch
             camera.lookAt(gorilla.position); // Always look at the gorilla
 
             // Position stick on gorilla's head if picked up
@@ -286,6 +283,13 @@
         window.addEventListener('mousemove', function(event) {
             mouseX = (event.clientX / window.innerWidth) * 2 - 1; // Normalized to [-1, 1]
             mouseY = (event.clientY / window.innerHeight) * 2 - 1; // Normalized to [-1, 1]
+
+            // Update yaw and pitch based on mouse movement
+            yaw += mouseX * sensitivity; // Horizontal rotation
+            pitch -= mouseY * sensitivity; // Vertical rotation
+
+            // Constrain pitch to prevent upside-down camera
+            pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
         });
 
         // Event listeners for keyboard input
