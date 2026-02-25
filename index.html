@@ -249,9 +249,9 @@
                 mouseX = event.movementX || 0;
                 mouseY = event.movementY || 0;
 
-                // Update yaw and pitch based on mouse movement
-                yaw += mouseX * sensitivity; // Horizontal rotation
-                pitch -= mouseY * sensitivity; // Vertical rotation
+                // Inverted mouse movement
+                yaw -= mouseX * sensitivity; // Change here to invert horizontal rotation
+                pitch -= mouseY * sensitivity; // Vertical rotation remains unchanged
 
                 // Constrain pitch to prevent upside-down camera
                 pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
