@@ -84,6 +84,12 @@
             // Add a stick to the ground
             addStick();
 
+            // Add event listeners for mouse and keyboard
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('keydown', onKeyDown);
+            window.addEventListener('keyup', onKeyUp);
+            document.addEventListener('fullscreenchange', onFullscreenChange);
+
             // Start the animation loop
             animate();
         }
@@ -208,6 +214,14 @@
                         console.log("Stick dropped!");
                     }
                     break;
+                case 'Escape': // Exit fullscreen and unlock pointer
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                        if (document.pointerLockElement) {
+                            document.exitPointerLock();
+                        }
+                    }
+                    break;
             }
         }
 
@@ -217,6 +231,21 @@
                 case 's':
                     movement.z = 0; // Stop moving forward/backward
                     break;
+            }
+        }
+
+        function onMouseMove(event) {
+            if (document.pointerLockElement) {
+                // Normalized mouse movements while pointer is locked
+                mouseX = event.movementX || 0;
+                mouseY = event.movementY || 0;
+
+                // Update yaw and pitch based on mouse movement
+                yaw += mouseX * sensitivity; // Horizontal rotation
+                pitch -= mouseY * sensitivity; // Vertical rotation
+
+                // Constrain pitch to prevent upside-down camera
+                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
             }
         }
 
@@ -279,22 +308,26 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Mouse movement event listener
-        window.addEventListener('mousemove', function(event) {
-            mouseX = (event.clientX / window.innerWidth) * 2 - 1; // Normalized to [-1, 1]
-            mouseY = (event.clientY / window.innerHeight) * 2 - 1; // Normalized to [-1, 1]
-
-            // Update yaw and pitch based on mouse movement
-            yaw += mouseX * sensitivity; // Horizontal rotation
-            pitch -= mouseY * sensitivity; // Vertical rotation
-
-            // Constrain pitch to prevent upside-down camera
-            pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+        // Fullscreen and pointer lock event listeners
+        window.addEventListener('dblclick', function() {
+            const element = document.body;
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            }
+            if (element.requestPointerLock) {
+                element.requestPointerLock();
+            }
         });
 
-        // Event listeners for keyboard input
-        window.addEventListener('keydown', onKeyDown);
-        window.addEventListener('keyup', onKeyUp);
+        function onFullscreenChange() {
+            if (document.fullscreenElement) {
+                // If entering fullscreen, lock the pointer
+                document.body.requestPointerLock();
+            } else {
+                // If exiting fullscreen, unlock the pointer
+                document.exitPointerLock();
+            }
+        }
 
         init();
     </script>
