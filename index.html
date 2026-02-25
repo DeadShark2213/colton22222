@@ -18,9 +18,13 @@
         let gravity = -0.01; // Gravity effect
         let groundY = 0.5; // Height of the ground (gorilla's y position)
         const trees = []; // Array to hold tree objects for collision detection
-        const rotationSpeed = 0.07; // Increased speed for smoother rotation
-        let targetRotationY = 0; // Target rotation for smooth turning
+        const rotationSpeed = 0.07; // Speed for smooth turning
         let stickPickedUp = false; // Track whether the stick is picked up
+
+        // Variables for mouse control
+        let mouseX = 0;
+        let mouseY = 0;
+        const sensitivity = 0.01; // Sensitivity for mouse movement
 
         function init() {
             // Create the scene
@@ -131,10 +135,10 @@
             updateGorillaPosition(); // Update gorilla position based on movement
             applyWalkingAnimation(); // Apply walking animation
 
-            // Smoothly rotate gorilla towards target rotation
-            gorilla.rotation.y += (targetRotationY - gorilla.rotation.y) * 0.15; // Increased smooth transition speed
+            // Update the gorilla's rotation based on mouse movement
+            gorilla.rotation.y += (mouseX * sensitivity);
 
-            // Update camera
+            // Update camera to follow the gorilla
             const angleOffset = gorilla.rotation.y; // Adjust camera based on gorilla's orientation
             camera.position.x = gorilla.position.x + 5 * Math.sin(angleOffset);
             camera.position.z = gorilla.position.z + 5 * Math.cos(angleOffset);
@@ -175,18 +179,12 @@
         let angle = 0; // For walking animation
 
         function onKeyDown(event) {
-            switch(event.key) {
+            switch (event.key) {
                 case 'w': // Move forward
                     movement.z = -1; // Set speed
                     break;
                 case 's': // Move backward
                     movement.z = 1; // Set speed
-                    break;
-                case 'ArrowLeft': // Look left
-                    targetRotationY += rotationSpeed; // Set target rotation to look left
-                    break;
-                case 'ArrowRight': // Look right
-                    targetRotationY -= rotationSpeed; // Set target rotation to look right
                     break;
                 case ' ': // Jump
                     if (!isJumping) { // Only jump if not already jumping
@@ -214,7 +212,7 @@
         }
 
         function onKeyUp(event) {
-            switch(event.key) {
+            switch (event.key) {
                 case 'w':
                 case 's':
                     movement.z = 0; // Stop moving forward/backward
@@ -279,6 +277,15 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Mouse movement event listener
+        window.addEventListener('mousemove', function(event) {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1; // Normalized to [-1, 1]
+            mouseY = (event.clientY / window.innerHeight) * 2 - 1; // Normalized to [-1, 1]
+
+            // Update the gorilla's rotation based on mouse Y position
+            gorilla.rotation.x = mouseY * sensitivity;
         });
 
         // Event listeners for keyboard input
