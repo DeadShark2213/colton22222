@@ -20,7 +20,7 @@
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        let scene, camera, renderer, gorilla, basePlate, stick, mineShack, hole;
+        let scene, camera, renderer, gorilla, basePlate, stick, mineTunnel, coalPit;
         let isJumping = false;
         let jumpVelocity = 0.2; 
         let gravity = -0.01; 
@@ -71,13 +71,13 @@
             rightLeg.position.set(0.3, -0.5, 0);
             gorilla.add(rightLeg);
 
-            gorilla.position.set(0, groundY + 0.5, 0); 
+            gorilla.position.set(0, groundY + 0.5, 0);
             scene.add(gorilla);
 
             addLargeTrees();
             addStick();
-            createMineShack();
-            createHole();
+            createCoalMine();
+            createCoalPit();
 
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('keydown', onKeyDown);
@@ -87,28 +87,27 @@
             animate();
         }
 
-        function createMineShack() {
-            const shackGeometry = new THREE.BoxGeometry(3, 2, 2);
-            const shackMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-            mineShack = new THREE.Mesh(shackGeometry, shackMaterial);
-            mineShack.position.set(0, 1, -10);
-            scene.add(mineShack);
+        function createCoalMine() {
+            const tunnelGeometry = new THREE.BoxGeometry(12, 5, 40); // Tunnel dimensions
+            const tunnelMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); 
+            mineTunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
+            mineTunnel.position.set(0, 2.5, -20); 
+            scene.add(mineTunnel);
 
-            const roofGeometry = new THREE.ConeGeometry(2.5, 1.5, 4);
-            const roofMaterial = new THREE.MeshStandardMaterial({ color: 0xA52A2A });
-            const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-            roof.position.set(0, 3, -10);
-            roof.rotation.y = Math.PI / 4;
-            scene.add(roof);
+            // Create mine entrance
+            const entranceGeometry = new THREE.BoxGeometry(4, 5, 1);
+            const entrance = new THREE.Mesh(entranceGeometry, tunnelMaterial);
+            entrance.position.set(0, 2.5, -39); 
+            scene.add(entrance);
         }
 
-        function createHole() {
-            const holeGeometry = new THREE.CylinderGeometry(6, 6, 20, 32); 
-            const holeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
-            hole = new THREE.Mesh(holeGeometry, holeMaterial);
-            hole.position.set(0, -10, -10);
-            hole.rotation.x = Math.PI / 2;
-            scene.add(hole);
+        function createCoalPit() {
+            const pitGeometry = new THREE.CylinderGeometry(15, 15, 15, 32);
+            const pitMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+            coalPit = new THREE.Mesh(pitGeometry, pitMaterial);
+            coalPit.position.set(0, -10, -20);
+            coalPit.rotation.x = Math.PI / 2;
+            scene.add(coalPit);
         }
 
         function addLargeTrees() {
@@ -176,14 +175,8 @@
                 }
             }
 
-            trees.forEach(tree => {
-                if (checkCollision(gorilla, tree)) {
-                    gorilla.position.sub(movement.clone().multiplyScalar(0.1));
-                }
-            });
-
-            if (gorilla.position.distanceTo(hole.position) < 7 && isJumping) {
-                gorilla.position.y = hole.position.y - 10; // Drop down
+            if (gorilla.position.distanceTo(coalPit.position) < 7 && isJumping) {
+                gorilla.position.y = coalPit.position.y - 10; // Drop down into the pit
                 isJumping = false; 
             }
 
