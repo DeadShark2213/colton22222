@@ -5,8 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Gorilla Game</title>
     <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { display: block; }
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+        }
+        canvas { 
+            display: block; 
+        }
+        /* Hide the cursor when in fullscreen mode */
+        .hide-cursor {
+            cursor: none;
+        }
     </style>
 </head>
 <body>
@@ -316,6 +325,7 @@
             }
             if (element.requestPointerLock) {
                 element.requestPointerLock();
+                document.body.classList.add('hide-cursor'); // Hide cursor
             }
         });
 
@@ -323,9 +333,11 @@
             if (document.fullscreenElement) {
                 // If entering fullscreen, lock the pointer
                 document.body.requestPointerLock();
+                document.body.classList.add('hide-cursor'); // Hide cursor
             } else {
                 // If exiting fullscreen, unlock the pointer
                 document.exitPointerLock();
+                document.body.classList.remove('hide-cursor'); // Show cursor
             }
         }
 
