@@ -125,10 +125,10 @@
 
         function addMineShaft() {
             // Create the main shaft structure
-            const shaftGeometry = new THREE.BoxGeometry(4, 10, 4);
+            const shaftGeometry = new THREE.BoxGeometry(6, 10, 6); // Larger shaft
             const shaftMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
             const mineShaft = new THREE.Mesh(shaftGeometry, shaftMaterial);
-            mineShaft.position.set(0, 5, -20);
+            mineShaft.position.set(0, 5, -25); // Positioning the shaft deeper
             scene.add(mineShaft);
             
             // Create support beams
@@ -137,17 +137,17 @@
             for (let i = -1; i <= 1; i += 2) {
                 for (let j = -1; j <= 1; j += 2) {
                     const beam = new THREE.Mesh(beamGeometry, beamMaterial);
-                    beam.position.set(i * 1.5, 3, j * 1.5);
+                    beam.position.set(i * 2, 3, j * 2); // Positioning beams inside the shaft
                     scene.add(beam);
                 }
             }
 
             // Create a railroad track
-            const trackGeometry = new THREE.BoxGeometry(0.5, 0.1, 20);
+            const trackGeometry = new THREE.BoxGeometry(0.5, 0.1, 12);
             const trackMaterial = new THREE.MeshStandardMaterial({ color: 0xA9A9A9 });
             const track = new THREE.Mesh(trackGeometry, trackMaterial);
             track.rotation.y = Math.PI / 4; // Angle the track
-            track.position.set(0, 0, -10);
+            track.position.set(0, 0.1, -19); // Position near the bottom of the shaft
             scene.add(track);
         }
 
