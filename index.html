@@ -20,7 +20,7 @@
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        let scene, camera, renderer, gorilla, basePlate, stick, mineTunnel, coalPit;
+        let scene, camera, renderer, gorilla, basePlate, stick;
         let isJumping = false;
         let jumpVelocity = 0.2; 
         let gravity = -0.01; 
@@ -71,13 +71,12 @@
             rightLeg.position.set(0.3, -0.5, 0);
             gorilla.add(rightLeg);
 
-            gorilla.position.set(0, groundY + 0.5, 0);
+            gorilla.position.set(0, groundY + 0.5, 0); 
             scene.add(gorilla);
 
             addLargeTrees();
             addStick();
-            createCoalMine();
-            createCoalPit();
+            addMineShaft(); // Add the mine shaft
 
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('keydown', onKeyDown);
@@ -85,29 +84,6 @@
             document.addEventListener('fullscreenchange', onFullscreenChange);
 
             animate();
-        }
-
-        function createCoalMine() {
-            const tunnelGeometry = new THREE.BoxGeometry(12, 5, 40); // Tunnel dimensions
-            const tunnelMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); 
-            mineTunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
-            mineTunnel.position.set(0, 2.5, -20); 
-            scene.add(mineTunnel);
-
-            // Create mine entrance
-            const entranceGeometry = new THREE.BoxGeometry(4, 5, 1);
-            const entrance = new THREE.Mesh(entranceGeometry, tunnelMaterial);
-            entrance.position.set(0, 2.5, -39); 
-            scene.add(entrance);
-        }
-
-        function createCoalPit() {
-            const pitGeometry = new THREE.CylinderGeometry(15, 15, 15, 32);
-            const pitMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
-            coalPit = new THREE.Mesh(pitGeometry, pitMaterial);
-            coalPit.position.set(0, -10, -20);
-            coalPit.rotation.x = Math.PI / 2;
-            scene.add(coalPit);
         }
 
         function addLargeTrees() {
@@ -147,6 +123,37 @@
             scene.add(stick);
         }
 
+        function addMineShaft() {
+            // Create the main shaft structure
+            const shaftGeometry = new THREE.BoxGeometry(4, 10, 4);
+            const shaftMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+            const mineShaft = new THREE.Mesh(shaftGeometry, shaftMaterial);
+            mineShaft.position.set(0, 5, -20);
+            scene.add(mineShaft);
+            
+            // Create support beams
+            const beamGeometry = new THREE.BoxGeometry(0.2, 6, 0.2);
+            const beamMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+            const beams = [];
+
+            for (let i = -1; i <= 1; i += 2) {
+                for (let j = -1; j <= 1; j += 2) {
+                    const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+                    beam.position.set(i * 1.5, 3, j * 1.5);
+                    scene.add(beam);
+                    beams.push(beam);
+                }
+            }
+
+            // Create a railroad track
+            const trackGeometry = new THREE.BoxGeometry(0.5, 0.1, 20);
+            const trackMaterial = new THREE.MeshStandardMaterial({ color: 0xA9A9A9 });
+            const track = new THREE.Mesh(trackGeometry, trackMaterial);
+            track.rotation.y = Math.PI / 4; // Angle the track
+            track.position.set(0, -5, -10);
+            scene.add(track);
+        }
+
         function animate() {
             requestAnimationFrame(animate);
             updateGorillaPosition(); 
@@ -175,10 +182,11 @@
                 }
             }
 
-            if (gorilla.position.distanceTo(coalPit.position) < 7 && isJumping) {
-                gorilla.position.y = coalPit.position.y - 10; // Drop down into the pit
-                isJumping = false; 
-            }
+            trees.forEach(tree => {
+                if (checkCollision(gorilla, tree)) {
+                    gorilla.position.sub(movement.clone().multiplyScalar(0.1));
+                }
+            });
 
             renderer.render(scene, camera);
         }
